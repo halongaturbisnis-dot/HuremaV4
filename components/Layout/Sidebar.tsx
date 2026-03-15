@@ -7,6 +7,7 @@ import {
 import { authService } from '../../services/authService';
 import { financeService } from '../../services/financeService';
 import { dispensationService } from '../../services/dispensationService';
+import { submissionService } from '../../services/submissionService';
 import { LOGO_ICON, Client_Name } from '../../assets';
 import Swal from 'sweetalert2';
 
@@ -27,6 +28,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
   const [unreadReimbursements, setUnreadReimbursements] = useState(0);
   const [unreadCompensations, setUnreadCompensations] = useState(0);
   const [unreadDispensations, setUnreadDispensations] = useState(0);
+  const [pendingSubmissions, setPendingSubmissions] = useState<Record<string, number>>({});
   const user = authService.getCurrentUser();
   const isAdmin = user?.role === 'admin' || user?.is_hr_admin || user?.is_performance_admin || user?.is_finance_admin;
 
@@ -34,14 +36,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
     if (isAdmin) {
       const fetchUnread = async () => {
         try {
-          const [reimburseCount, compensationCount, dispensationCount] = await Promise.all([
+          const [reimburseCount, compensationCount, dispensationCount, submissionCounts] = await Promise.all([
             financeService.getUnreadCount(),
             financeService.getUnreadCompensationCount(),
-            dispensationService.getUnreadCount()
+            dispensationService.getUnreadCount(),
+            submissionService.getPendingCounts()
           ]);
           setUnreadReimbursements(reimburseCount);
           setUnreadCompensations(compensationCount);
           setUnreadDispensations(dispensationCount);
+          setPendingSubmissions(submissionCounts);
         } catch (error) {
           console.error('Error fetching unread counts:', error);
         }
@@ -68,7 +72,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
     }
   };
 
-  const NavItem = ({ id, icon: Icon, label, indent = false, badge }: { id: any, icon: any, label: string, indent?: boolean, badge?: number }) => (
+  const NavItem = ({ id, icon: Icon, label, indent = false, badge, showNew }: { id: any, icon: any, label: string, indent?: boolean, badge?: number, showNew?: boolean }) => (
     <button
       onClick={() => setActiveTab(id)}
       className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 w-full mb-1 ${
@@ -80,13 +84,18 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
     >
       <div className="relative shrink-0">
         <Icon size={20} />
-        {badge !== undefined && badge > 0 && isCollapsed && (
+        {( (badge !== undefined && badge > 0) || showNew ) && isCollapsed && (
           <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></div>
         )}
       </div>
       {!isCollapsed && (
         <div className="flex items-center justify-between flex-1 overflow-hidden">
-          <span className="font-medium text-sm truncate">{label}</span>
+          <div className="flex items-center gap-2 truncate">
+            <span className="font-medium text-sm truncate">{label}</span>
+            {showNew && (
+              <span className="bg-red-500 text-white text-[8px] font-bold px-1 rounded-full">NEW</span>
+            )}
+          </div>
           {badge !== undefined && badge > 0 && (
             <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
               {badge}
@@ -173,12 +182,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
           
           {(isSubmissionOpen || isCollapsed) && (
             <div className={`mt-1 overflow-hidden transition-all duration-300 ${isCollapsed ? '' : 'max-h-96'}`}>
-              <NavItem id="leave" icon={Plane} label="Libur Mandiri" indent />
-              <NavItem id="overtime" icon={Timer} label="Presensi Lembur" indent />
-              <NavItem id="permission" icon={ClipboardList} label="Izin" indent />
-              <NavItem id="annual_leave" icon={Calendar} label="Cuti Tahunan" indent />
+              <NavItem id="leave" icon={Plane} label="Libur Mandiri" indent showNew={isAdmin && pendingSubmissions['Libur Mandiri'] > 0} />
+              <NavItem id="overtime" icon={Timer} label="Presensi Lembur" indent showNew={isAdmin && pendingSubmissions['Lembur'] > 0} />
+              <NavItem id="permission" icon={ClipboardList} label="Izin" indent showNew={isAdmin && pendingSubmissions['Izin'] > 0} />
+              <NavItem id="annual_leave" icon={Calendar} label="Cuti Tahunan" indent showNew={isAdmin && pendingSubmissions['Cuti Tahunan'] > 0} />
               {user?.gender === 'Perempuan' && (
-                <NavItem id="maternity_leave" icon={Heart} label="Cuti Melahirkan" indent />
+                <NavItem id="maternity_leave" icon={Heart} label="Cuti Melahirkan" indent showNew={isAdmin && pendingSubmissions['Cuti Melahirkan'] > 0} />
               )}
               {(isAdmin || user?.is_hr_admin) && (
                 <NavItem id="admin_dispensation" icon={ClipboardList} label="Antrean Dispensasi" indent badge={unreadDispensations} />

@@ -25,6 +25,20 @@ export const submissionService = {
     return data as Submission[];
   },
 
+  async getByType(type: string) {
+    const { data, error } = await supabase
+      .from('account_submissions')
+      .select(`
+        *,
+        account:accounts!account_id(full_name, internal_nik)
+      `)
+      .eq('type', type)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data as Submission[];
+  },
+
   async getSubmissionsByRange(startDate: string, endDate: string) {
     const { data, error } = await supabase
       .from('account_submissions')
@@ -246,5 +260,32 @@ export const submissionService = {
     
     if (error) throw error;
     return true;
+  },
+
+  async getPendingCounts() {
+    const { data, error } = await supabase
+      .from('account_submissions')
+      .select('type')
+      .eq('status', 'Pending');
+    
+    if (error) throw error;
+    
+    const counts: Record<string, number> = {
+      'Libur Mandiri': 0,
+      'Lembur': 0,
+      'Izin': 0,
+      'Cuti Tahunan': 0,
+      'Cuti Melahirkan': 0
+    };
+
+    data?.forEach(item => {
+      if (counts[item.type] !== undefined) {
+        counts[item.type]++;
+      } else {
+        counts[item.type] = (counts[item.type] || 0) + 1;
+      }
+    });
+
+    return counts;
   }
 };

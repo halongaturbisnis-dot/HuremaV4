@@ -34,6 +34,7 @@ const EarlySalaryMain = lazy(() => import('./modules/finance/EarlySalaryModule')
 const CompensationMain = lazy(() => import('./modules/finance/CompensationMain'));
 const DispensationMain = lazy(() => import('./modules/dispensation/DispensationMain'));
 const AdminDispensationMain = lazy(() => import('./modules/dispensation/AdminDispensationMain'));
+const AdminSubmissionModule = lazy(() => import('./modules/admin/AdminSubmissionModule'));
 const AttendanceReportMain = lazy(() => import('./modules/report/AttendanceReportMain'));
 const EmployeeReportMain = lazy(() => import('./modules/report/EmployeeReportMain'));
 const ReportMainModule = lazy(() => import('./modules/report/ReportMainModule'));
@@ -60,6 +61,8 @@ const App: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  const isAdmin = user?.role === 'admin' || user?.is_hr_admin || user?.is_performance_admin || user?.is_finance_admin;
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -120,8 +123,6 @@ const App: React.FC = () => {
       </Suspense>
     );
   }
-
-  const isAdmin = user?.role === 'admin' || user?.is_hr_admin || user?.is_performance_admin || user?.is_finance_admin;
 
   const NavItemMobile = ({ id, icon: Icon, label, indent = false }: { id: any, icon: any, label: string, indent?: boolean }) => (
     <button
@@ -372,17 +373,67 @@ const App: React.FC = () => {
             ) : activeTab === 'presence' ? (
               <PresenceMain />
             ) : activeTab === 'overtime' ? (
-              <OvertimeMain />
+              isAdmin ? (
+                <AdminSubmissionModule 
+                  user={user!} 
+                  type="Lembur" 
+                  title="Manajemen Lembur" 
+                  subtitle="Verifikasi & Persetujuan Lembur Pegawai"
+                  icon={Timer}
+                />
+              ) : (
+                <OvertimeMain />
+              )
             ) : activeTab === 'submission' ? (
               <SubmissionMain />
             ) : activeTab === 'leave' ? (
-              <LeaveMain />
+              isAdmin ? (
+                <AdminSubmissionModule 
+                  user={user!} 
+                  type="Libur Mandiri" 
+                  title="Manajemen Libur Mandiri" 
+                  subtitle="Verifikasi & Persetujuan Libur Mandiri Pegawai"
+                  icon={Plane}
+                />
+              ) : (
+                <LeaveMain />
+              )
             ) : activeTab === 'annual_leave' ? (
-              <AnnualLeaveMain />
+              isAdmin ? (
+                <AdminSubmissionModule 
+                  user={user!} 
+                  type="Cuti Tahunan" 
+                  title="Manajemen Cuti Tahunan" 
+                  subtitle="Verifikasi & Persetujuan Cuti Tahunan Pegawai"
+                  icon={Calendar}
+                />
+              ) : (
+                <AnnualLeaveMain />
+              )
             ) : activeTab === 'permission' ? (
-              <PermissionMain />
+              isAdmin ? (
+                <AdminSubmissionModule 
+                  user={user!} 
+                  type="Izin" 
+                  title="Manajemen Izin" 
+                  subtitle="Verifikasi & Persetujuan Izin Pegawai"
+                  icon={ClipboardList}
+                />
+              ) : (
+                <PermissionMain />
+              )
             ) : activeTab === 'maternity_leave' ? (
-              <MaternityLeaveMain />
+              isAdmin ? (
+                <AdminSubmissionModule 
+                  user={user!} 
+                  type="Cuti Melahirkan" 
+                  title="Manajemen Cuti Melahirkan" 
+                  subtitle="Verifikasi & Persetujuan Cuti Melahirkan Pegawai"
+                  icon={Heart}
+                />
+              ) : (
+                <MaternityLeaveMain />
+              )
             ) : activeTab === 'kpi' ? (
               <KPIMain />
             ) : activeTab === 'key_activity' ? (
