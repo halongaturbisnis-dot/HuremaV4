@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  Fingerprint, ShieldCheck, Timer, Umbrella, Calendar, Heart, 
+  Fingerprint, ShieldCheck, Timer, Plane, Calendar, Heart, 
   ClipboardList, Target, CheckSquare, MapPin, Video, MessageSquare, 
   AlertTriangle, Receipt, Wallet, UserCircle, Files, Database,
   Users, CalendarClock, BarChart3, Settings, ArrowLeft, Activity,
@@ -79,9 +79,9 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ user, setActiveTab })
   ] : [
     { id: 'presence', label: 'Presensi Reguler', icon: Fingerprint, color: 'bg-emerald-50 text-[#006E62]' },
     { id: 'dispensation', label: 'Dispensasi Presensi', icon: ShieldCheck, color: 'bg-blue-50 text-blue-600' },
-    { id: 'overtime', label: 'Lembur', icon: Timer, color: 'bg-orange-50 text-orange-600' },
-    ...(accountDetail?.schedule_type === 'Fleksibel' ? [{ id: 'leave', label: 'Libur Mandiri', icon: Umbrella, color: 'bg-sky-50 text-sky-600' }] : []),
-    { id: 'annual_leave', label: 'Cuti', icon: Calendar, color: 'bg-indigo-50 text-indigo-600' },
+    { id: 'overtime', label: 'Presensi Lembur', icon: Timer, color: 'bg-orange-50 text-orange-600' },
+    { id: 'leave', label: 'Libur Mandiri', icon: Plane, color: 'bg-sky-50 text-sky-600' },
+    { id: 'annual_leave', label: 'Cuti Tahunan', icon: Calendar, color: 'bg-indigo-50 text-indigo-600' },
     ...(user.gender === 'Perempuan' ? [{ id: 'maternity_leave', label: 'Cuti Melahirkan', icon: Heart, color: 'bg-rose-50 text-rose-600' }] : []),
     { id: 'permission', label: 'Izin', icon: ClipboardList, color: 'bg-amber-50 text-amber-600' },
     { id: 'kpi', label: 'Key Performance Indicator', icon: Target, color: 'bg-purple-50 text-purple-600' },
@@ -101,7 +101,10 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ user, setActiveTab })
     { id: 'daily_monitoring', label: 'Pemantauan Harian', icon: Activity, color: 'bg-rose-50 text-rose-600' },
     { id: 'admin_dispensation', label: 'Dispensasi sisi admin', icon: ShieldCheck, color: 'bg-cyan-50 text-cyan-600' },
     { id: 'attendance_report', label: 'Laporan Kehadiran', icon: BarChart3, color: 'bg-slate-50 text-slate-600' },
-    { id: 'submission', label: 'Pengajuan', icon: ClipboardCheck, color: 'bg-blue-50 text-blue-600' },
+    { id: 'leave', label: 'Libur Mandiri', icon: Plane, color: 'bg-blue-50 text-blue-600' },
+    { id: 'overtime', label: 'Presensi Lembur', icon: Timer, color: 'bg-orange-50 text-orange-600' },
+    { id: 'permission', label: 'Izin', icon: ClipboardList, color: 'bg-amber-50 text-amber-600' },
+    { id: 'annual_leave', label: 'Cuti Tahunan', icon: Calendar, color: 'bg-indigo-50 text-indigo-600' },
     { id: 'reimbursement', label: 'Reimburse', icon: Receipt, color: 'bg-pink-50 text-pink-600' },
     { id: 'early_salary', label: 'Ambil Gaji Awal', icon: Wallet, color: 'bg-yellow-50 text-yellow-600' },
     { id: 'compensation', label: 'Kompensasi', icon: Receipt, color: 'bg-rose-50 text-rose-600' },

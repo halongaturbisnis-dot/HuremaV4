@@ -19,6 +19,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed, setIsCollapsed }) => {
   const [isMasterOpen, setIsMasterOpen] = useState(true);
+  const [isSubmissionOpen, setIsSubmissionOpen] = useState(false);
   const [isPerformanceOpen, setIsPerformanceOpen] = useState(false);
   const [isFinanceOpen, setIsFinanceOpen] = useState(false);
   const [isPresenceOpen, setIsPresenceOpen] = useState(true);
@@ -154,8 +155,37 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
           <NavItem id="daily_monitoring" icon={Activity} label="Pemantauan Harian" />
         )}
 
-        {/* 3. Pengajuan */}
-        <NavItem id="submission" icon={ClipboardCheck} label="Pengajuan" />
+        {/* 3. Pengajuan Menu Group */}
+        <div className="mt-4">
+          <button 
+            onClick={() => setIsSubmissionOpen(!isSubmissionOpen)}
+            className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 w-full mb-1 text-gray-600 hover:bg-gray-100`}
+            title={isCollapsed ? 'Pengajuan' : ''}
+          >
+            <ClipboardCheck size={20} className="shrink-0 text-gray-400" />
+            {!isCollapsed && (
+              <div className="flex items-center justify-between flex-1 overflow-hidden">
+                <span className="font-medium text-sm truncate">Pengajuan</span>
+                {isSubmissionOpen ? <ChevronDown size={16} className="text-gray-300" /> : <ChevronRight size={16} className="text-gray-300" />}
+              </div>
+            )}
+          </button>
+          
+          {(isSubmissionOpen || isCollapsed) && (
+            <div className={`mt-1 overflow-hidden transition-all duration-300 ${isCollapsed ? '' : 'max-h-96'}`}>
+              <NavItem id="leave" icon={Plane} label="Libur Mandiri" indent />
+              <NavItem id="overtime" icon={Timer} label="Presensi Lembur" indent />
+              <NavItem id="permission" icon={ClipboardList} label="Izin" indent />
+              <NavItem id="annual_leave" icon={Calendar} label="Cuti Tahunan" indent />
+              {user?.gender === 'Perempuan' && (
+                <NavItem id="maternity_leave" icon={Heart} label="Cuti Melahirkan" indent />
+              )}
+              {(isAdmin || user?.is_hr_admin) && (
+                <NavItem id="admin_dispensation" icon={ClipboardList} label="Antrean Dispensasi" indent badge={unreadDispensations} />
+              )}
+            </div>
+          )}
+        </div>
 
         {/* 4. Performance Menu Group */}
         {(isAdmin || user?.is_performance_admin) && (
@@ -240,11 +270,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
 
         <NavItem id="document" icon={Files} label="Dokumen Digital" />
 
-        {/* 12. Antrean Dispensasi */}
-        {(isAdmin || user?.is_hr_admin) && (
-          <NavItem id="admin_dispensation" icon={ClipboardList} label="Antrean Dispensasi" badge={unreadDispensations} />
-        )}
-
         {/* Laporan Menu Group */}
         {(isAdmin || user?.is_hr_admin || user?.is_finance_admin) && (
           <div className="mt-4">
@@ -310,12 +335,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
         <div className="mt-4">
           {!isAdmin && (
             <>
-              <NavItem id="leave" icon={Plane} label="Libur Mandiri" />
-              <NavItem id="annual_leave" icon={Calendar} label="Cuti Tahunan" />
-              <NavItem id="permission" icon={ClipboardList} label="Izin" />
-              {user?.gender === 'Perempuan' && (
-                <NavItem id="maternity_leave" icon={Heart} label="Cuti Melahirkan" />
-              )}
               <NavItem id="my_payslip" icon={Receipt} label="Slip Gaji Saya" />
               <NavItem id="settings" icon={Settings} label="Pengaturan" />
             </>

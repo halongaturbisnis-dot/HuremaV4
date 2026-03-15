@@ -319,23 +319,25 @@ const App: React.FC = () => {
                 <NavItemMobile id="compensation" icon={Receipt} label="Kompensasi" indent={false} />
               )}
 
-              {!isAdmin && (
-                <>
-                  <NavItemMobile id="leave" icon={Plane} label="Libur Mandiri" />
-                  <NavItemMobile id="annual_leave" icon={Calendar} label="Cuti Tahunan" />
-                  <NavItemMobile id="permission" icon={ClipboardList} label="Izin" />
-                  {user?.gender === 'Perempuan' && (
-                    <NavItemMobile id="maternity_leave" icon={Heart} label="Cuti Melahirkan" />
-                  )}
-                </>
-              )}
               {(isAdmin || user?.is_hr_admin) && (
                 <NavItemMobile id="daily_monitoring" icon={Activity} label="Pemantauan Harian" />
               )}
-              {isAdmin && (
-                <NavItemMobile id="admin_dispensation" icon={ClipboardCheck} label="Dispensasi sisi admin" />
+              
+              <div className="flex items-center gap-3 px-4 py-3 text-gray-400 mt-2">
+                <ClipboardCheck size={20} />
+                <span className="font-bold text-[10px] uppercase tracking-widest">Pengajuan</span>
+              </div>
+              <NavItemMobile id="leave" icon={Plane} label="Libur Mandiri" indent />
+              <NavItemMobile id="overtime" icon={Timer} label="Presensi Lembur" indent />
+              <NavItemMobile id="permission" icon={ClipboardList} label="Izin" indent />
+              <NavItemMobile id="annual_leave" icon={Calendar} label="Cuti Tahunan" indent />
+              {user?.gender === 'Perempuan' && (
+                <NavItemMobile id="maternity_leave" icon={Heart} label="Cuti Melahirkan" indent />
               )}
-              <NavItemMobile id="submission" icon={ClipboardCheck} label="Pengajuan" />
+              {isAdmin && (
+                <NavItemMobile id="admin_dispensation" icon={ClipboardCheck} label="Dispensasi sisi admin" indent />
+              )}
+
               {!isAdmin && <NavItemMobile id="document" icon={Files} label="Dokumen Digital" />}
               {!isAdmin && <NavItemMobile id="employee_report" icon={BarChart3} label="Laporan Karyawan" />}
               <NavItemMobile id="attendance_report" icon={BarChart3} label="Laporan Kehadiran" />
