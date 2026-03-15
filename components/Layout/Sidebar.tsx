@@ -11,6 +11,55 @@ import { submissionService } from '../../services/submissionService';
 import { LOGO_ICON, Client_Name } from '../../assets';
 import Swal from 'sweetalert2';
 
+interface NavItemProps {
+  id: any;
+  icon: any;
+  label: string;
+  activeTab: string;
+  setActiveTab: (tab: any) => void;
+  isCollapsed: boolean;
+  indent?: boolean;
+  badge?: number;
+  showNew?: boolean;
+}
+
+const NavItem: React.FC<NavItemProps> = ({ 
+  id, icon: Icon, label, activeTab, setActiveTab, isCollapsed, indent = false, badge, showNew 
+}) => (
+  <button
+    type="button"
+    onClick={() => setActiveTab(id)}
+    className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 w-full mb-1 ${
+      activeTab === id 
+        ? 'bg-[#006E62] text-white shadow-md' 
+        : 'text-gray-600 hover:bg-gray-100'
+    } ${indent && !isCollapsed ? 'ml-4 w-[calc(100%-1rem)]' : ''}`}
+    title={isCollapsed ? label : ''}
+  >
+    <div className="relative shrink-0">
+      <Icon size={20} />
+      {( (badge !== undefined && badge > 0) || showNew ) && isCollapsed && (
+        <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></div>
+      )}
+    </div>
+    {!isCollapsed && (
+      <div className="flex items-center justify-between flex-1 overflow-hidden">
+        <div className="flex items-center gap-2 truncate">
+          <span className="font-medium text-sm truncate">{label}</span>
+          {showNew && (
+            <span className="bg-red-500 text-white text-[8px] font-bold px-1 rounded-full">NEW</span>
+          )}
+        </div>
+        {badge !== undefined && badge > 0 && (
+          <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+            {badge}
+          </span>
+        )}
+      </div>
+    )}
+  </button>
+);
+
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: any) => void;
@@ -72,43 +121,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
     }
   };
 
-  const NavItem = ({ id, icon: Icon, label, indent = false, badge, showNew }: { id: any, icon: any, label: string, indent?: boolean, badge?: number, showNew?: boolean }) => (
-    <button
-      onClick={() => setActiveTab(id)}
-      className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 w-full mb-1 ${
-        activeTab === id 
-          ? 'bg-[#006E62] text-white shadow-md' 
-          : 'text-gray-600 hover:bg-gray-100'
-      } ${indent && !isCollapsed ? 'ml-4 w-[calc(100%-1rem)]' : ''}`}
-      title={isCollapsed ? label : ''}
-    >
-      <div className="relative shrink-0">
-        <Icon size={20} />
-        {( (badge !== undefined && badge > 0) || showNew ) && isCollapsed && (
-          <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></div>
-        )}
-      </div>
-      {!isCollapsed && (
-        <div className="flex items-center justify-between flex-1 overflow-hidden">
-          <div className="flex items-center gap-2 truncate">
-            <span className="font-medium text-sm truncate">{label}</span>
-            {showNew && (
-              <span className="bg-red-500 text-white text-[8px] font-bold px-1 rounded-full">NEW</span>
-            )}
-          </div>
-          {badge !== undefined && badge > 0 && (
-            <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-              {badge}
-            </span>
-          )}
-        </div>
-      )}
-    </button>
-  );
-
   return (
     <aside 
-      className={`hidden md:flex flex-col border-r border-gray-100 bg-white sticky top-0 h-screen transition-all duration-300 ${
+      className={`hidden md:flex flex-col border-r border-gray-100 bg-white sticky top-0 h-screen transition-all duration-300 z-30 ${
         isCollapsed ? 'w-20' : 'w-64'
       }`}
     >
@@ -128,12 +143,22 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
       </div>
       
       <nav className="flex-1 px-3 overflow-y-auto scrollbar-none">
-        {!isAdmin && <NavItem id="dashboard" icon={LayoutDashboard} label="Beranda" />}
+        {!isAdmin && (
+          <NavItem 
+            id="dashboard" 
+            icon={LayoutDashboard} 
+            label="Beranda" 
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            isCollapsed={isCollapsed}
+          />
+        )}
         
         {/* 1. Master Menu Group */}
         {(isAdmin || user?.is_hr_admin) && (
           <div className="mt-4">
             <button 
+              type="button"
               onClick={() => setIsMasterOpen(!isMasterOpen)}
               className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 w-full mb-1 text-gray-600 hover:bg-gray-100`}
               title={isCollapsed ? 'Master' : ''}
@@ -149,11 +174,55 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
             
             {(isMasterOpen || isCollapsed) && (
               <div className={`mt-1 overflow-hidden transition-all duration-300 ${isCollapsed ? '' : 'max-h-96'}`}>
-                {isAdmin && <NavItem id="master_app" icon={Database} label="Master Aplikasi" indent />}
-                <NavItem id="location" icon={MapPin} label="Data Lokasi" indent />
-                <NavItem id="schedule" icon={CalendarClock} label="Manajemen Jadwal" indent />
-                <NavItem id="account" icon={Users} label="Akun" indent />
-                {isAdmin && <NavItem id="admin_settings" icon={ShieldCheck} label="Pengaturan Admin" indent />}
+                {isAdmin && (
+                  <NavItem 
+                    id="master_app" 
+                    icon={Database} 
+                    label="Master Aplikasi" 
+                    indent 
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    isCollapsed={isCollapsed}
+                  />
+                )}
+                <NavItem 
+                  id="location" 
+                  icon={MapPin} 
+                  label="Data Lokasi" 
+                  indent 
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  isCollapsed={isCollapsed}
+                />
+                <NavItem 
+                  id="schedule" 
+                  icon={CalendarClock} 
+                  label="Manajemen Jadwal" 
+                  indent 
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  isCollapsed={isCollapsed}
+                />
+                <NavItem 
+                  id="account" 
+                  icon={Users} 
+                  label="Akun" 
+                  indent 
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  isCollapsed={isCollapsed}
+                />
+                {isAdmin && (
+                  <NavItem 
+                    id="admin_settings" 
+                    icon={ShieldCheck} 
+                    label="Pengaturan Admin" 
+                    indent 
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    isCollapsed={isCollapsed}
+                  />
+                )}
               </div>
             )}
           </div>
@@ -161,12 +230,20 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
 
         {/* 2. Pemantauan Harian */}
         {(isAdmin || user?.is_hr_admin) && (
-          <NavItem id="daily_monitoring" icon={Activity} label="Pemantauan Harian" />
+          <NavItem 
+            id="daily_monitoring" 
+            icon={Activity} 
+            label="Pemantauan Harian" 
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            isCollapsed={isCollapsed}
+          />
         )}
 
         {/* 3. Pengajuan Menu Group */}
         <div className="mt-4">
           <button 
+            type="button"
             onClick={() => setIsSubmissionOpen(!isSubmissionOpen)}
             className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 w-full mb-1 text-gray-600 hover:bg-gray-100`}
             title={isCollapsed ? 'Pengajuan' : ''}
@@ -182,15 +259,69 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
           
           {(isSubmissionOpen || isCollapsed) && (
             <div className={`mt-1 overflow-hidden transition-all duration-300 ${isCollapsed ? '' : 'max-h-96'}`}>
-              <NavItem id="leave" icon={Plane} label="Libur Mandiri" indent showNew={isAdmin && pendingSubmissions['Libur Mandiri'] > 0} />
-              <NavItem id="overtime" icon={Timer} label="Presensi Lembur" indent showNew={isAdmin && pendingSubmissions['Lembur'] > 0} />
-              <NavItem id="permission" icon={ClipboardList} label="Izin" indent showNew={isAdmin && pendingSubmissions['Izin'] > 0} />
-              <NavItem id="annual_leave" icon={Calendar} label="Cuti Tahunan" indent showNew={isAdmin && pendingSubmissions['Cuti Tahunan'] > 0} />
+              <NavItem 
+                id="leave" 
+                icon={Plane} 
+                label="Libur Mandiri" 
+                indent 
+                showNew={isAdmin && pendingSubmissions['Libur Mandiri'] > 0} 
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isCollapsed={isCollapsed}
+              />
+              <NavItem 
+                id="overtime" 
+                icon={Timer} 
+                label="Presensi Lembur" 
+                indent 
+                showNew={isAdmin && pendingSubmissions['Lembur'] > 0} 
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isCollapsed={isCollapsed}
+              />
+              <NavItem 
+                id="permission" 
+                icon={ClipboardList} 
+                label="Izin" 
+                indent 
+                showNew={isAdmin && pendingSubmissions['Izin'] > 0} 
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isCollapsed={isCollapsed}
+              />
+              <NavItem 
+                id="annual_leave" 
+                icon={Calendar} 
+                label="Cuti Tahunan" 
+                indent 
+                showNew={isAdmin && pendingSubmissions['Cuti Tahunan'] > 0} 
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isCollapsed={isCollapsed}
+              />
               {user?.gender === 'Perempuan' && (
-                <NavItem id="maternity_leave" icon={Heart} label="Cuti Melahirkan" indent showNew={isAdmin && pendingSubmissions['Cuti Melahirkan'] > 0} />
+                <NavItem 
+                  id="maternity_leave" 
+                  icon={Heart} 
+                  label="Cuti Melahirkan" 
+                  indent 
+                  showNew={isAdmin && pendingSubmissions['Cuti Melahirkan'] > 0} 
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  isCollapsed={isCollapsed}
+                />
               )}
               {(isAdmin || user?.is_hr_admin) && (
-                <NavItem id="admin_dispensation" icon={ClipboardList} label="Antrean Dispensasi" indent badge={unreadDispensations} />
+                <NavItem 
+                  id="admin_dispensation" 
+                  icon={ClipboardList} 
+                  label="Antrean Dispensasi" 
+                  indent 
+                  badge={unreadDispensations} 
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  isCollapsed={isCollapsed}
+                />
               )}
             </div>
           )}
@@ -200,6 +331,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
         {(isAdmin || user?.is_performance_admin) && (
           <div className="mt-4">
             <button 
+              type="button"
               onClick={() => setIsPerformanceOpen(!isPerformanceOpen)}
               className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 w-full mb-1 text-gray-600 hover:bg-gray-100`}
               title={isCollapsed ? 'Performance' : ''}
@@ -215,9 +347,33 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
             
             {(isPerformanceOpen || isCollapsed) && (
               <div className={`mt-1 overflow-hidden transition-all duration-300 ${isCollapsed ? '' : 'max-h-96'}`}>
-                <NavItem id="kpi" icon={Target} label="Key Performance Indicator" indent />
-                <NavItem id="key_activity" icon={CheckSquare} label="Key Activities" indent />
-                <NavItem id="sales_report" icon={MapPin} label="Sales Report" indent />
+                <NavItem 
+                  id="kpi" 
+                  icon={Target} 
+                  label="Key Performance Indicator" 
+                  indent 
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  isCollapsed={isCollapsed}
+                />
+                <NavItem 
+                  id="key_activity" 
+                  icon={CheckSquare} 
+                  label="Key Activities" 
+                  indent 
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  isCollapsed={isCollapsed}
+                />
+                <NavItem 
+                  id="sales_report" 
+                  icon={MapPin} 
+                  label="Sales Report" 
+                  indent 
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  isCollapsed={isCollapsed}
+                />
               </div>
             )}
           </div>
@@ -227,6 +383,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
         {(isAdmin || user?.is_finance_admin) && (
           <div className="mt-4">
             <button 
+              type="button"
               onClick={() => setIsFinanceOpen(!isFinanceOpen)}
               className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 w-full mb-1 text-gray-600 hover:bg-gray-100`}
               title={isCollapsed ? 'Finance' : ''}
@@ -252,17 +409,67 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
             
             {(isFinanceOpen || isCollapsed) && (
               <div className={`mt-1 overflow-hidden transition-all duration-300 ${isCollapsed ? '' : 'max-h-96'}`}>
-                <NavItem id="salary_scheme" icon={Receipt} label="Skema Gaji" indent />
+                <NavItem 
+                  id="salary_scheme" 
+                  icon={Receipt} 
+                  label="Skema Gaji" 
+                  indent 
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  isCollapsed={isCollapsed}
+                />
                 {(isAdmin || user?.is_finance_admin) && (
                   <>
-                    <NavItem id="salary_adjustment" icon={Receipt} label="Kustom Gaji" indent />
-                    <NavItem id="payroll" icon={Receipt} label="Payroll" indent />
+                    <NavItem 
+                      id="salary_adjustment" 
+                      icon={Receipt} 
+                      label="Kustom Gaji" 
+                      indent 
+                      activeTab={activeTab}
+                      setActiveTab={setActiveTab}
+                      isCollapsed={isCollapsed}
+                    />
+                    <NavItem 
+                      id="payroll" 
+                      icon={Receipt} 
+                      label="Payroll" 
+                      indent 
+                      activeTab={activeTab}
+                      setActiveTab={setActiveTab}
+                      isCollapsed={isCollapsed}
+                    />
                   </>
                 )}
-                <NavItem id="reimbursement" icon={Receipt} label="Reimburse" indent badge={(isAdmin || user?.is_finance_admin) ? unreadReimbursements : undefined} />
-                <NavItem id="early_salary" icon={Receipt} label="Ambil Gaji Awal" indent />
+                <NavItem 
+                  id="reimbursement" 
+                  icon={Receipt} 
+                  label="Reimburse" 
+                  indent 
+                  badge={(isAdmin || user?.is_finance_admin) ? unreadReimbursements : undefined} 
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  isCollapsed={isCollapsed}
+                />
+                <NavItem 
+                  id="early_salary" 
+                  icon={Receipt} 
+                  label="Ambil Gaji Awal" 
+                  indent 
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  isCollapsed={isCollapsed}
+                />
                 {(isAdmin || user?.is_finance_admin) && (
-                  <NavItem id="compensation" icon={Receipt} label="Kompensasi" indent badge={unreadCompensations} />
+                  <NavItem 
+                    id="compensation" 
+                    icon={Receipt} 
+                    label="Kompensasi" 
+                    indent 
+                    badge={unreadCompensations} 
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    isCollapsed={isCollapsed}
+                  />
                 )}
               </div>
             )}
@@ -270,19 +477,62 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
         )}
 
         <div className="mt-4">
-          <NavItem id="rapat" icon={Video} label="Rapat" />
-          <NavItem id="pengumuman" icon={Megaphone} label="Pengumuman" />
-          <NavItem id="employee_of_the_period" icon={Trophy} label="Employee of The Period" />
-          <NavItem id="feedback" icon={ClipboardList} label="Feedback Pegawai" />
-          <NavItem id="lapor" icon={AlertTriangle} label="Lapor Pelanggaran" />
+          <NavItem 
+            id="rapat" 
+            icon={Video} 
+            label="Rapat" 
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            isCollapsed={isCollapsed}
+          />
+          <NavItem 
+            id="pengumuman" 
+            icon={Megaphone} 
+            label="Pengumuman" 
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            isCollapsed={isCollapsed}
+          />
+          <NavItem 
+            id="employee_of_the_period" 
+            icon={Trophy} 
+            label="Employee of The Period" 
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            isCollapsed={isCollapsed}
+          />
+          <NavItem 
+            id="feedback" 
+            icon={ClipboardList} 
+            label="Feedback Pegawai" 
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            isCollapsed={isCollapsed}
+          />
+          <NavItem 
+            id="lapor" 
+            icon={AlertTriangle} 
+            label="Lapor Pelanggaran" 
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            isCollapsed={isCollapsed}
+          />
         </div>
 
-        <NavItem id="document" icon={Files} label="Dokumen Digital" />
+        <NavItem 
+          id="document" 
+          icon={Files} 
+          label="Dokumen Digital" 
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          isCollapsed={isCollapsed}
+        />
 
         {/* Laporan Menu Group */}
         {(isAdmin || user?.is_hr_admin || user?.is_finance_admin) && (
           <div className="mt-4">
             <button 
+              type="button"
               onClick={() => setIsReportOpen(!isReportOpen)}
               className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 w-full mb-1 text-gray-600 hover:bg-gray-100`}
               title={isCollapsed ? 'Laporan' : ''}
@@ -300,12 +550,36 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
               <div className={`mt-1 overflow-hidden transition-all duration-300 ${isCollapsed ? '' : 'max-h-96'}`}>
                 {(isAdmin || user?.is_hr_admin) && (
                   <>
-                    <NavItem id="employee_report" icon={BarChart3} label="Laporan Karyawan" indent />
-                    <NavItem id="attendance_report" icon={Fingerprint} label="Laporan Kehadiran" indent />
+                    <NavItem 
+                      id="employee_report" 
+                      icon={BarChart3} 
+                      label="Laporan Karyawan" 
+                      indent 
+                      activeTab={activeTab}
+                      setActiveTab={setActiveTab}
+                      isCollapsed={isCollapsed}
+                    />
+                    <NavItem 
+                      id="attendance_report" 
+                      icon={Fingerprint} 
+                      label="Laporan Kehadiran" 
+                      indent 
+                      activeTab={activeTab}
+                      setActiveTab={setActiveTab}
+                      isCollapsed={isCollapsed}
+                    />
                   </>
                 )}
                 {(isAdmin || user?.is_finance_admin) && (
-                  <NavItem id="finance_report" icon={Wallet} label="Laporan Finance" indent />
+                  <NavItem 
+                    id="finance_report" 
+                    icon={Wallet} 
+                    label="Laporan Finance" 
+                    indent 
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    isCollapsed={isCollapsed}
+                  />
                 )}
               </div>
             )}
@@ -316,6 +590,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
         {!isAdmin && (
           <div className="mt-4">
             <button 
+              type="button"
               onClick={() => setIsPresenceOpen(!isPresenceOpen)}
               className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 w-full mb-1 text-gray-600 hover:bg-gray-100`}
               title={isCollapsed ? 'Presensi' : ''}
@@ -333,9 +608,33 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
             
             {(isPresenceOpen || isCollapsed) && (
               <div className={`mt-1 overflow-hidden transition-all duration-300 ${isCollapsed ? '' : 'max-h-96'}`}>
-                <NavItem id="presence" icon={Fingerprint} label="Presensi Reguler" indent />
-                <NavItem id="overtime" icon={Timer} label="Presensi Lembur" indent />
-                <NavItem id="dispensation" icon={ClipboardList} label="Dispensasi Presensi" indent />
+                <NavItem 
+                  id="presence" 
+                  icon={Fingerprint} 
+                  label="Presensi Reguler" 
+                  indent 
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  isCollapsed={isCollapsed}
+                />
+                <NavItem 
+                  id="overtime" 
+                  icon={Timer} 
+                  label="Presensi Lembur" 
+                  indent 
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  isCollapsed={isCollapsed}
+                />
+                <NavItem 
+                  id="dispensation" 
+                  icon={ClipboardList} 
+                  label="Dispensasi Presensi" 
+                  indent 
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  isCollapsed={isCollapsed}
+                />
               </div>
             )}
           </div>
@@ -344,8 +643,22 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
         <div className="mt-4">
           {!isAdmin && (
             <>
-              <NavItem id="my_payslip" icon={Receipt} label="Slip Gaji Saya" />
-              <NavItem id="settings" icon={Settings} label="Pengaturan" />
+              <NavItem 
+                id="my_payslip" 
+                icon={Receipt} 
+                label="Slip Gaji Saya" 
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isCollapsed={isCollapsed}
+              />
+              <NavItem 
+                id="settings" 
+                icon={Settings} 
+                label="Pengaturan" 
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isCollapsed={isCollapsed}
+              />
             </>
           )}
         </div>
@@ -353,6 +666,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
 
       <div className="p-4 border-t border-gray-50 space-y-2">
         <button 
+          type="button"
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-3 text-rose-500 hover:bg-rose-50 rounded-md transition-all font-medium text-sm"
           title={isCollapsed ? 'Keluar' : ''}
@@ -362,6 +676,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isCollapsed,
         </button>
         
         <button 
+          type="button"
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="w-full flex items-center justify-center p-2 text-gray-400 hover:bg-gray-100 rounded-md transition-all"
         >
