@@ -49,9 +49,26 @@ class GoogleDriveService {
   }
 
   /**
-   * Mendapatkan URL gambar publik dari ID File Google Drive.
+   * Mendapatkan URL file dari ID File Google Drive.
+   * Jika formatnya 'id|filename', akan dicek ekstensinya.
+   * Jika gambar, gunakan lh3.googleusercontent. Jika bukan, gunakan Google Drive viewer.
    */
   getFileUrl(fileId: string): string {
+    if (!fileId) return '';
+    
+    // Jika formatnya 'id|filename'
+    if (fileId.includes('|')) {
+      const [id, name] = fileId.split('|');
+      const isImage = /\.(jpg|jpeg|png|webp|gif|svg|bmp)$/i.test(name);
+      
+      if (isImage) {
+        return `https://lh3.googleusercontent.com/d/${id}=s1600`;
+      }
+      // Untuk non-image, buka via Google Drive viewer
+      return `https://drive.google.com/file/d/${id}/view`;
+    }
+
+    // Fallback untuk data lama atau ID murni (default ke lh3 agar tidak memecah tampilan gambar profil/presensi)
     return `https://lh3.googleusercontent.com/d/${fileId}=s1600`;
   }
 }

@@ -45,7 +45,8 @@ const LocationAdminForm: React.FC<LocationAdminFormProps> = ({ onClose, onSubmit
     try {
       for (let i = 0; i < files.length; i++) {
         const fileId = await googleDriveService.uploadFile(files[i]);
-        newFileIds.push(fileId);
+        // Simpan dalam format id|filename agar bisa dideteksi tipenya saat dibuka
+        newFileIds.push(`${fileId}|${files[i].name}`);
       }
       setFormData(prev => ({ ...prev, file_ids: newFileIds }));
     } catch (error) {
