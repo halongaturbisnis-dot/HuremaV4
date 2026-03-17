@@ -16,8 +16,8 @@ export const healthService = {
       .order('change_date', { ascending: false });
     
     if (error) throw error;
-    // Filter out logs where account role is superadmin
-    return (data as any[]).filter(log => log.account?.role !== 'superadmin') as HealthLogExtended[];
+    // Filter out logs where account role is superadmin (case-insensitive)
+    return (data as any[]).filter(log => !log.account?.role?.toLowerCase().includes('superadmin')) as HealthLogExtended[];
   },
 
   async downloadTemplate() {
@@ -26,7 +26,7 @@ export const healthService = {
       .from('accounts')
       .select('id, internal_nik, full_name')
       .is('end_date', null)
-      .neq('role', 'superadmin');
+      .not('role', 'ilike', '%superadmin%');
 
     if (error) throw error;
 

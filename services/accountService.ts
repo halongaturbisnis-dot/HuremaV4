@@ -25,7 +25,7 @@ export const accountService = {
         *,
         location:locations(name)
       `)
-      .neq('role', 'superadmin')
+      .not('role', 'ilike', '%superadmin%')
       .order('created_at', { ascending: false });
     
     if (error) {

@@ -24,8 +24,8 @@ export const disciplineService = {
       .select('*, account:accounts(full_name, internal_nik, role)')
       .order('issue_date', { ascending: false });
     if (error) throw error;
-    // Filter out logs where account role is superadmin
-    return (data as any[]).filter(log => log.account?.role !== 'superadmin') as WarningLogExtended[];
+    // Filter out logs where account role is superadmin (case-insensitive)
+    return (data as any[]).filter(log => !log.account?.role?.toLowerCase().includes('superadmin')) as WarningLogExtended[];
   },
 
   async getWarningsByAccountId(accountId: string) {
@@ -61,8 +61,8 @@ export const disciplineService = {
       .select('*, account:accounts(full_name, internal_nik, role)')
       .order('termination_date', { ascending: false });
     if (error) throw error;
-    // Filter out logs where account role is superadmin
-    return (data as any[]).filter(log => log.account?.role !== 'superadmin') as TerminationLogExtended[];
+    // Filter out logs where account role is superadmin (case-insensitive)
+    return (data as any[]).filter(log => !log.account?.role?.toLowerCase().includes('superadmin')) as TerminationLogExtended[];
   },
 
   async getTerminationByAccountId(accountId: string) {
@@ -121,7 +121,7 @@ export const disciplineService = {
       .from('accounts')
       .select('id, internal_nik, full_name')
       .is('end_date', null)
-      .neq('role', 'superadmin');
+      .not('role', 'ilike', '%superadmin%');
 
     if (error) throw error;
 
@@ -213,7 +213,7 @@ export const disciplineService = {
       .from('accounts')
       .select('id, internal_nik, full_name')
       .is('end_date', null)
-      .neq('role', 'superadmin');
+      .not('role', 'ilike', '%superadmin%');
 
     if (error) throw error;
 

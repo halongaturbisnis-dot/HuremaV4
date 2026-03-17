@@ -27,8 +27,8 @@ export const certificationService = {
       .order('entry_date', { ascending: false });
     
     if (error) throw error;
-    // Filter out logs where account role is superadmin
-    return (data as any[]).filter(log => log.account?.role !== 'superadmin') as AccountCertificationExtended[];
+    // Filter out logs where account role is superadmin (case-insensitive)
+    return (data as any[]).filter(log => !log.account?.role?.toLowerCase().includes('superadmin')) as AccountCertificationExtended[];
   },
 
   async getByAccountId(accountId: string) {
