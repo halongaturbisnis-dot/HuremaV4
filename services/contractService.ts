@@ -101,18 +101,26 @@ export const contractService = {
       'Jenis Kontrak (*)', 
       'Tgl Mulai (YYYY-MM-DD) (*)', 
       'Tgl Akhir (YYYY-MM-DD) (*)', 
-      'Keterangan', 
-      'Link PDF Google Drive (Opsional)'
+      'Keterangan'
     ];
     wsImport.addRow(headers);
-    wsImport.getRow(1).font = { bold: true };
+    
+    // Style headers: Bold and Red for mandatory columns
+    const headerRow = wsImport.getRow(1);
+    headerRow.font = { bold: true };
+    
+    // Mandatory columns: D (No Kontrak), E (Jenis), F (Mulai), G (Akhir)
+    [4, 5, 6, 7].forEach(colIdx => {
+      const cell = headerRow.getCell(colIdx);
+      cell.font = { color: { argb: 'FFFF0000' }, bold: true };
+    });
 
     accounts.forEach(acc => {
       wsImport.addRow([
         acc.id,
         acc.internal_nik,
         acc.full_name,
-        '', '', '', '', '', ''
+        '', '', '', '', ''
       ]);
     });
 
@@ -138,7 +146,7 @@ export const contractService = {
     }
 
     wsImport.columns.forEach((col, idx) => {
-      col.width = [20, 15, 25, 22, 18, 22, 22, 22, 22][idx];
+      col.width = [20, 15, 25, 22, 18, 22, 22, 22][idx];
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
@@ -146,7 +154,7 @@ export const contractService = {
     saveAs(dataBlob, `HUREMA_Contract_Template_${new Date().toISOString().split('T')[0]}.xlsx`);
   },
 
-  async processImport(file: File) {
+  async processImport(file: File, bulkFiles: Record<string, string> = {}) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = async (e) => {
@@ -167,18 +175,31 @@ export const contractService = {
 
             const startDate = parseDate(row['Tgl Mulai (YYYY-MM-DD) (*)']);
             const endDate = parseDate(row['Tgl Akhir (YYYY-MM-DD) (*)']);
+            const contractNumber = row['Nomor Kontrak (*)'] || '';
+
+            // Smart matching logic
+            let matchedFileId = null;
+            if (contractNumber) {
+              const normalizedNo = String(contractNumber).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+              // Try to find in bulkFiles
+              const match = Object.entries(bulkFiles).find(([fileName]) => {
+                const normalizedFileName = fileName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                return normalizedFileName === normalizedNo;
+              });
+              if (match) matchedFileId = match[1];
+            }
 
             return {
               account_id: row['Account ID (Hidden)'],
               full_name: row['Nama Karyawan'],
               internal_nik: row['NIK Internal'],
-              contract_number: row['Nomor Kontrak (*)'],
+              contract_number: contractNumber,
               contract_type: row['Jenis Kontrak (*)'],
               start_date: startDate,
               end_date: endDate || null,
               notes: row['Keterangan'] || null,
-              file_link: row['Link PDF Google Drive (Opsional)'] || null,
-              isValid: !!(row['Account ID (Hidden)'] && row['Nomor Kontrak (*)'] && startDate)
+              file_id: matchedFileId,
+              isValid: !!(row['Account ID (Hidden)'] && contractNumber && startDate)
             };
           });
           resolve(results);
@@ -192,7 +213,6 @@ export const contractService = {
     const validData = data.filter(d => d.isValid);
     const results = [];
     for (const item of validData) {
-      const driveId = item.file_link ? item.file_link.match(/[-\w]{25,}/)?.[0] : null;
       const res = await this.create({
         account_id: item.account_id,
         contract_number: item.contract_number,
@@ -200,7 +220,7 @@ export const contractService = {
         start_date: item.start_date,
         end_date: item.end_date,
         notes: item.notes,
-        file_id: driveId || null
+        file_id: item.file_id || null
       });
       results.push(res);
     }
