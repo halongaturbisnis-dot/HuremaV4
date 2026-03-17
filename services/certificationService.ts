@@ -22,12 +22,13 @@ export const certificationService = {
       .from('account_certifications')
       .select(`
         *,
-        account:accounts(full_name, internal_nik)
+        account:accounts(full_name, internal_nik, role)
       `)
       .order('entry_date', { ascending: false });
     
     if (error) throw error;
-    return data as AccountCertificationExtended[];
+    // Filter out logs where account role is superadmin
+    return (data as any[]).filter(log => log.account?.role !== 'superadmin') as AccountCertificationExtended[];
   },
 
   async getByAccountId(accountId: string) {

@@ -13,18 +13,19 @@ export const careerService = {
       .from('account_career_logs')
       .select(`
         *,
-        account:accounts(full_name, internal_nik)
+        account:accounts(full_name, internal_nik, role)
       `)
       .order('change_date', { ascending: false });
     
     if (error) throw error;
-    return data as CareerLogExtended[];
+    // Filter out logs where account role is superadmin
+    return (data as any[]).filter(log => log.account?.role !== 'superadmin') as CareerLogExtended[];
   },
 
   async downloadTemplate() {
     // Optimasi: Gunakan query spesifik untuk mencegah lag saat fetching data besar
     const [accRes, locRes, schRes] = await Promise.all([
-      supabase.from('accounts').select('id, internal_nik, full_name').is('end_date', null),
+      supabase.from('accounts').select('id, internal_nik, full_name').is('end_date', null).neq('role', 'superadmin'),
       locationService.getAll(),
       scheduleService.getAll()
     ]);

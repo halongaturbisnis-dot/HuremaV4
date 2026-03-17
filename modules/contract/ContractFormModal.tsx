@@ -16,7 +16,7 @@ const ContractFormModal: React.FC<ContractFormModalProps> = ({ onClose, onSucces
   const [formData, setFormData] = useState<any>({
     account_id: initialData?.account_id || '',
     contract_number: initialData?.contract_number || '',
-    contract_type: initialData?.contract_type || 'PKWT 1',
+    contract_type: initialData?.contract_type || 'PKWT',
     start_date: initialData?.start_date || '',
     end_date: initialData?.end_date || '',
     file_id: initialData?.file_id || '',
@@ -86,8 +86,7 @@ const ContractFormModal: React.FC<ContractFormModalProps> = ({ onClose, onSucces
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Jenis Kontrak</label>
             <select name="contract_type" value={formData.contract_type} onChange={handleChange} className="w-full px-3 py-2 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none">
-              <option value="PKWT 1">PKWT 1</option>
-              <option value="PKWT 2">PKWT 2</option>
+              <option value="PKWT">PKWT</option>
               <option value="PKWTT">PKWTT (Tetap)</option>
               <option value="Magang">Magang</option>
               <option value="Harian">Harian</option>

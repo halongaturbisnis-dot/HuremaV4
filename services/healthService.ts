@@ -11,12 +11,13 @@ export const healthService = {
       .from('account_health_logs')
       .select(`
         *,
-        account:accounts(full_name, internal_nik)
+        account:accounts(full_name, internal_nik, role)
       `)
       .order('change_date', { ascending: false });
     
     if (error) throw error;
-    return data as HealthLogExtended[];
+    // Filter out logs where account role is superadmin
+    return (data as any[]).filter(log => log.account?.role !== 'superadmin') as HealthLogExtended[];
   },
 
   async downloadTemplate() {
@@ -24,7 +25,8 @@ export const healthService = {
     const { data: accounts, error } = await supabase
       .from('accounts')
       .select('id, internal_nik, full_name')
-      .is('end_date', null);
+      .is('end_date', null)
+      .neq('role', 'superadmin');
 
     if (error) throw error;
 

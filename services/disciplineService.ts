@@ -21,10 +21,11 @@ export const disciplineService = {
   async getWarningsAll() {
     const { data, error } = await supabase
       .from('account_warning_logs')
-      .select('*, account:accounts(full_name, internal_nik)')
+      .select('*, account:accounts(full_name, internal_nik, role)')
       .order('issue_date', { ascending: false });
     if (error) throw error;
-    return data as WarningLogExtended[];
+    // Filter out logs where account role is superadmin
+    return (data as any[]).filter(log => log.account?.role !== 'superadmin') as WarningLogExtended[];
   },
 
   async getWarningsByAccountId(accountId: string) {
@@ -57,10 +58,11 @@ export const disciplineService = {
   async getTerminationsAll() {
     const { data, error } = await supabase
       .from('account_termination_logs')
-      .select('*, account:accounts(full_name, internal_nik)')
+      .select('*, account:accounts(full_name, internal_nik, role)')
       .order('termination_date', { ascending: false });
     if (error) throw error;
-    return data as TerminationLogExtended[];
+    // Filter out logs where account role is superadmin
+    return (data as any[]).filter(log => log.account?.role !== 'superadmin') as TerminationLogExtended[];
   },
 
   async getTerminationByAccountId(accountId: string) {
@@ -118,7 +120,8 @@ export const disciplineService = {
     const { data: accounts, error } = await supabase
       .from('accounts')
       .select('id, internal_nik, full_name')
-      .is('end_date', null);
+      .is('end_date', null)
+      .neq('role', 'superadmin');
 
     if (error) throw error;
 
@@ -209,7 +212,8 @@ export const disciplineService = {
     const { data: accounts, error } = await supabase
       .from('accounts')
       .select('id, internal_nik, full_name')
-      .is('end_date', null);
+      .is('end_date', null)
+      .neq('role', 'superadmin');
 
     if (error) throw error;
 

@@ -124,7 +124,7 @@ export const contractService = {
       ]);
     });
 
-    const contractTypes = ['PKWT 1', 'PKWT 2', 'PKWTT', 'Magang', 'Harian', 'Addendum'];
+    const contractTypes = ['PKWT', 'PKWTT', 'Magang', 'Harian', 'Addendum'];
     const maxRow = wsImport.rowCount + 500;
     for (let i = 2; i <= maxRow; i++) {
       wsImport.getCell(`E${i}`).dataValidation = {

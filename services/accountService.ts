@@ -25,6 +25,7 @@ export const accountService = {
         *,
         location:locations(name)
       `)
+      .neq('role', 'superadmin')
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -145,7 +146,7 @@ export const accountService = {
       await supabase.from('account_contracts').insert([{
         account_id: newAccount.id,
         contract_number: contract_initial.contract_number,
-        contract_type: contract_initial.contract_type || account.employee_type,
+        contract_type: contract_initial.contract_type || (account.employee_type === 'Kontrak' ? 'PKWT' : account.employee_type),
         start_date: contract_initial.start_date || account.start_date,
         end_date: contract_initial.end_date || account.end_date,
         file_id: contract_initial.file_id || null,
@@ -301,7 +302,7 @@ export const accountService = {
       promises.push(supabase.from('account_contracts').insert([{
         account_id: newAccount.id,
         contract_number: contract_initial.contract_number,
-        contract_type: contract_initial.contract_type || account.employee_type,
+        contract_type: contract_initial.contract_type || (account.employee_type === 'Kontrak' ? 'PKWT' : account.employee_type),
         start_date: contract_initial.start_date || account.start_date,
         end_date: contract_initial.end_date || account.end_date,
         file_id: contract_initial.file_id || null,
