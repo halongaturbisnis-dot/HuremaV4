@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { X, Edit2, Trash2, User, Phone, Mail, Calendar, MapPin, Briefcase, Shield, Heart, GraduationCap, Download, ExternalLink, Clock, Activity, Plus, Paperclip, FileBadge, Award, ShieldAlert, LogOut } from 'lucide-react';
 import Swal from 'sweetalert2';
-import { Account, CareerLog, HealthLog, AccountContract, AccountCertification, WarningLog, TerminationLog, SalaryScheme } from '../../types';
+import { Account, CareerLog, AccountContract, AccountCertification, WarningLog, TerminationLog, SalaryScheme } from '../../types';
 import { accountService } from '../../services/accountService';
 import { contractService } from '../../services/contractService';
 import { certificationService } from '../../services/certificationService';
@@ -28,7 +28,6 @@ interface AccountDetailProps {
 const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDelete, isReadOnly = false }) => {
   const [account, setAccount] = useState<Account | null>(null);
   const [careerLogs, setCareerLogs] = useState<CareerLog[]>([]);
-  const [healthLogs, setHealthLogs] = useState<HealthLog[]>([]);
   const [contracts, setContracts] = useState<AccountContract[]>([]);
   const [certs, setCerts] = useState<AccountCertification[]>([]);
   const [warnings, setWarnings] = useState<WarningLog[]>([]);
@@ -36,7 +35,7 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
   const [salaryScheme, setSalaryScheme] = useState<SalaryScheme | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [showLogForm, setShowLogForm] = useState<{ type: 'career' | 'health', data?: any, isEdit?: boolean } | null>(null);
+  const [showLogForm, setShowLogForm] = useState<{ type: 'career', data?: any, isEdit?: boolean } | null>(null);
   const [showCertForm, setShowCertForm] = useState<{ show: boolean, data?: any }>({ show: false });
   const [showContractForm, setShowContractForm] = useState<{ show: boolean, data?: any }>({ show: false });
   const [showWarningForm, setShowWarningForm] = useState(false);
@@ -52,10 +51,9 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const [acc, careers, healths, contractList, certList, warningList, term, assignment] = await Promise.all([
+      const [acc, careers, contractList, certList, warningList, term, assignment] = await Promise.all([
         accountService.getById(id),
         accountService.getCareerLogs(id),
-        accountService.getHealthLogs(id),
         contractService.getByAccountId(id),
         certificationService.getByAccountId(id),
         disciplineService.getWarningsByAccountId(id),
@@ -64,7 +62,6 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
       ]);
       setAccount(acc as any);
       setCareerLogs(careers);
-      setHealthLogs(healths);
       setContracts(contractList);
       setCerts(certList);
       setWarnings(warningList);
@@ -99,29 +96,18 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
           setCareerLogs(prev => prev.map(l => l.id === tempId ? created : l));
         }
         setAccount(prev => prev ? { ...prev, position: data.position, grade: data.grade, location_id: data.location_id, location: { ...prev.location, name: data.location_name } } : null);
-      } else {
-        if (isEdit) {
-          const updated = await accountService.updateHealthLog(data.id, data);
-          setHealthLogs(prev => prev.map(l => l.id === data.id ? updated : l));
-        } else {
-          setHealthLogs(prev => [optimisticEntry, ...prev]);
-          const created = await accountService.createHealthLog(data);
-          setHealthLogs(prev => prev.map(l => l.id === tempId ? created : l));
-        }
-        setAccount(prev => prev ? { ...prev, mcu_status: data.mcu_status, health_risk: data.health_risk } : null);
       }
       setShowLogForm(null);
       Swal.fire({ title: 'Berhasil!', text: `Riwayat telah ${isEdit ? 'diperbarui' : 'ditambahkan'}.`, icon: 'success', timer: 1000, showConfirmButton: false });
     } catch (error) {
       if (type === 'career' && !isEdit) setCareerLogs(prev => prev.filter(l => l.id !== tempId));
-      else if (type === 'health' && !isEdit) setHealthLogs(prev => prev.filter(l => l.id !== tempId));
       Swal.fire('Gagal', 'Gagal menyimpan riwayat', 'error');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeleteLog = async (logId: string, type: 'career' | 'health') => {
+  const handleDeleteLog = async (logId: string, type: 'career') => {
     const result = await Swal.fire({
       title: 'Hapus riwayat?',
       text: "Data ini tidak dapat dikembalikan.",
@@ -139,9 +125,6 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
         if (type === 'career') {
           await accountService.deleteCareerLog(logId);
           setCareerLogs(prev => prev.filter(l => l.id !== logId));
-        } else {
-          await accountService.deleteHealthLog(logId);
-          setHealthLogs(prev => prev.filter(l => l.id !== logId));
         }
         Swal.fire('Terhapus!', 'Riwayat telah dihapus.', 'success');
       } catch (error) {
@@ -533,44 +516,6 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
                       <>
                         <button onClick={() => setShowCertForm({ show: true, data: cert })} className="text-gray-300 hover:text-[#006E62]"><Edit2 size={12} /></button>
                         <button onClick={() => handleDeleteCert(cert.id)} className="text-gray-300 hover:text-red-500"><Trash2 size={12} /></button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </DetailSection>
-
-        {/* i. Riwayat Kesehatan */}
-        <DetailSection 
-          icon={Activity} 
-          title="Riwayat Kesehatan" 
-          onAdd={() => setShowLogForm({ type: 'health', data: account })}
-          isScrollable
-        >
-          <div className="space-y-3">
-            {healthLogs.length === 0 ? (
-              <p className="text-[10px] text-gray-400 italic">Belum ada riwayat kesehatan.</p>
-            ) : (
-              healthLogs.map((log) => (
-                <div key={log.id} className="flex group justify-between items-start border-l-2 border-gray-100 pl-3 py-1 relative">
-                  <div className="absolute -left-[5px] top-2 w-2 h-2 rounded-full bg-[#00FFE4]"></div>
-                  <div className="flex-1 min-w-0 pr-4">
-                    <p className="text-[10px] font-bold text-gray-700 leading-tight">MCU: {log.mcu_status || '-'}</p>
-                    <p className="text-[9px] text-red-400 font-medium">Risiko: {log.health_risk || '-'}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-[8px] text-gray-300 font-bold uppercase">{formatDate(log.change_date)}</p>
-                      {log.file_mcu_id && (
-                        <button onClick={() => setPreviewMedia({ url: googleDriveService.getFileUrl(log.file_mcu_id!).replace('=s1600', '=s0'), title: 'Hasil MCU', type: 'image' })} className="text-[#006E62] hover:underline flex items-center gap-0.5 text-[8px] font-bold"><Paperclip size={8} /> MCU</button>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {!isReadOnly && (
-                      <>
-                        <button onClick={() => setShowLogForm({ type: 'health', data: log, isEdit: true })} className="text-gray-300 hover:text-[#006E62]"><Edit2 size={12} /></button>
-                        <button onClick={() => handleDeleteLog(log.id, 'health')} className="text-gray-300 hover:text-red-500"><Trash2 size={12} /></button>
                       </>
                     )}
                   </div>

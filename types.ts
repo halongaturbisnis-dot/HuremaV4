@@ -132,8 +132,6 @@ export interface Account {
   access_code: string;
   password?: string;
   role: 'admin' | 'user';
-  mcu_status: string;
-  health_risk: string;
   
   created_at?: string;
   updated_at?: string;

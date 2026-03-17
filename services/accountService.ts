@@ -136,8 +136,6 @@ export const accountService = {
     // 3. Otomatis buat log kesehatan awal
     await supabase.from('account_health_logs').insert([{
       account_id: newAccount.id,
-      mcu_status: newAccount.mcu_status,
-      health_risk: newAccount.health_risk,
       file_mcu_id: file_mcu_id || null,
       notes: 'Initial Health Record'
     }]);
@@ -294,8 +292,6 @@ export const accountService = {
       }]),
       supabase.from('account_health_logs').insert([{
         account_id: newAccount.id,
-        mcu_status: newAccount.mcu_status,
-        health_risk: newAccount.health_risk,
         file_mcu_id: file_mcu_id || null,
         notes: 'Initial Health Record'
       }])

@@ -24,7 +24,6 @@ import { googleDriveService } from '../../services/googleDriveService';
 
 // Import sub-modules
 import CareerLogMain from '../career/CareerLogMain';
-import HealthLogMain from '../health/HealthLogMain';
 import ContractMain from '../contract/ContractMain';
 import CertificationMain from '../certification/CertificationMain';
 import DisciplineMain from '../discipline/DisciplineMain';
@@ -52,7 +51,7 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
   const bulkImageInputRef = useRef<HTMLInputElement>(null);
 
   // Tab State Internal Modul Akun
-  const [activeSubTab, setActiveSubTab] = useState<'data' | 'career' | 'contract' | 'cert' | 'health' | 'discipline'>('data');
+  const [activeSubTab, setActiveSubTab] = useState<'data' | 'career' | 'contract' | 'cert' | 'discipline'>('data');
 
   useEffect(() => {
     if (isSelfProfile && user) {
@@ -148,7 +147,7 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
         'Akumulasi Cuti (Ya/Tidak)', 'Maksimal Carry-over', 'Jatah Carry-over Saat Ini',
         'Batasi Check-in Datang (Ya/Tidak)', 'Batasi Check-out Pulang (Ya/Tidak)', 
         'Batasi Check-in Lembur (Ya/Tidak)', 'Batasi Check-out Lembur (Ya/Tidak)',
-        'Kode Akses', 'Password', 'Status Medis / MCU', 'Risiko Kesehatan'
+        'Kode Akses', 'Password'
       ];
 
       templateSheet.addRow(headers);
@@ -166,7 +165,6 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
       const religionList = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Budha', 'Konghucu', 'Kepercayaan Lain'];
       const maritalList = ['Belum Menikah', 'Menikah', 'Cerai Hidup', 'Cerai Mati'];
       const empTypeList = ['Tetap', 'Kontrak', 'Harian', 'Magang'];
-      const healthRiskList = ['Tidak ada risiko kerja', 'Risiko kerja ringan', 'Risiko kerja sedang', 'Risiko kerja berat'];
       const yesNoList = ['Ya', 'Tidak'];
       const locList = locations.map(l => l.name);
       const schList = ['Fleksibel', 'Shift Dinamis', ...schedules.map(s => s.name)];
@@ -176,10 +174,9 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
       refSheet.getColumn(2).values = religionList;
       refSheet.getColumn(3).values = maritalList;
       refSheet.getColumn(4).values = empTypeList;
-      refSheet.getColumn(5).values = healthRiskList;
-      refSheet.getColumn(6).values = yesNoList;
-      refSheet.getColumn(7).values = locList;
-      refSheet.getColumn(8).values = schList;
+      refSheet.getColumn(5).values = yesNoList;
+      refSheet.getColumn(6).values = locList;
+      refSheet.getColumn(7).values = schList;
 
       // Apply Data Validations (Dropdowns)
       // We apply validation to 100 rows
@@ -197,14 +194,12 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
         // Pilih Jadwal Kerja (Col 24)
         templateSheet.getCell(`X${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$H$1:$H$${schList.length}`] };
         // Akumulasi Cuti (Col 27)
-        templateSheet.getCell(`AA${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$F$1:$F$2`] };
+        templateSheet.getCell(`AA${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
         // Radius Limits (Col 30-33)
-        templateSheet.getCell(`AD${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$F$1:$F$2`] };
-        templateSheet.getCell(`AE${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$F$1:$F$2`] };
-        templateSheet.getCell(`AF${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$F$1:$F$2`] };
-        templateSheet.getCell(`AG${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$F$1:$F$2`] };
-        // Risiko Kesehatan (Col 37)
-        templateSheet.getCell(`AK${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$${healthRiskList.length}`] };
+        templateSheet.getCell(`AD${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+        templateSheet.getCell(`AE${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+        templateSheet.getCell(`AF${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
+        templateSheet.getCell(`AG${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`Lists!$E$1:$E$2`] };
       }
 
       // Auto-size columns
@@ -356,9 +351,7 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
                 is_presence_limited_ot_out: getVal(row['Batasi Check-out Lembur (Ya/Tidak)']) !== 'Tidak',
                 access_code: String(getVal(row['Kode Akses']) || ''),
                 password: String(getVal(row['Password']) || '123456'),
-                role: 'user',
-                mcu_status: getVal(row['Status Medis / MCU']) || '',
-                health_risk: getVal(row['Risiko Kesehatan']) || ''
+                role: 'user'
               };
             });
 
@@ -753,7 +746,6 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
         <SubTab id="career" label="Log Karir" icon={History} />
         <SubTab id="contract" label="Kontrak Kerja" icon={FileBadge} />
         <SubTab id="cert" label="Sertifikasi" icon={Award} />
-        <SubTab id="health" label="Log Kesehatan" icon={Activity} />
         <SubTab id="discipline" label="Peringatan & Keluar" icon={ShieldAlert} />
       </div>
 
@@ -963,10 +955,6 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
       ) : activeSubTab === 'cert' ? (
         <div className="animate-in fade-in duration-300">
           <CertificationMain />
-        </div>
-      ) : activeSubTab === 'health' ? (
-        <div className="animate-in fade-in duration-300">
-          <HealthLogMain />
         </div>
       ) : activeSubTab === 'discipline' ? (
         <div className="animate-in fade-in duration-300">

@@ -50,14 +50,11 @@ const AccountForm: React.FC<AccountFormProps> = ({ onClose, onSubmit, initialDat
     is_presence_limited_ot_out: initialData?.is_presence_limited_ot_out ?? true,
     access_code: initialData?.access_code || '',
     password: initialData?.password || '',
-    mcu_status: initialData?.mcu_status || '',
-    health_risk: initialData?.health_risk || '',
     photo_google_id: initialData?.photo_google_id || '',
     ktp_google_id: initialData?.ktp_google_id || '',
     diploma_google_id: initialData?.diploma_google_id || '',
     // Tambahan untuk log awal
     file_sk_id: '',
-    file_mcu_id: '',
     // Kontrak Awal
     contract_initial: {
       contract_number: '',
@@ -666,7 +663,7 @@ const AccountForm: React.FC<AccountFormProps> = ({ onClose, onSubmit, initialDat
                    </>
                  )}
 
-                 <div className="grid grid-cols-2 gap-2 mt-4">
+                  <div className="grid grid-cols-2 gap-2 mt-4">
                     <div className="space-y-1">
                       <Label htmlFor="access_code" required>Kode Akses</Label>
                       <input id="access_code" name="access_code" value={formData.access_code} onChange={handleChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none" required />
@@ -676,44 +673,6 @@ const AccountForm: React.FC<AccountFormProps> = ({ onClose, onSubmit, initialDat
                       <input id="password" type="password" name="password" value={formData.password} onChange={handleChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none" required />
                     </div>
                  </div>
-
-                 {!isSelfEdit && (
-                   <>
-                    <div className="space-y-1 pt-2">
-                        <Label htmlFor="mcu_status">Status Medis / MCU</Label>
-                        <input id="mcu_status" name="mcu_status" value={formData.mcu_status} onChange={handleChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none" />
-                    </div>
-                    <div className="space-y-1">
-                        <Label htmlFor="health_risk">Risiko Kesehatan</Label>
-                        <select id="health_risk" name="health_risk" value={formData.health_risk} onChange={handleChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-[#006E62] outline-none">
-                          <option value="">-- Pilih Risiko --</option>
-                          <option value="Tidak ada risiko kerja">Tidak ada risiko kerja</option>
-                          <option value="Risiko kerja ringan">Risiko kerja ringan</option>
-                          <option value="Risiko kerja sedang">Risiko kerja sedang</option>
-                          <option value="Risiko kerja berat">Risiko kerja berat</option>
-                        </select>
-                    </div>
-                    {!initialData && (
-                      <div className="space-y-1 p-2 bg-gray-50 rounded border border-gray-100 mt-2">
-                        <Label htmlFor="file_mcu_id">Upload Hasil MCU Awal</Label>
-                        <div className="flex items-center gap-2 mt-1">
-                          <label htmlFor="file_mcu_id" className="flex items-center gap-2 px-3 py-1.5 bg-white border border-dashed border-gray-300 rounded cursor-pointer hover:bg-gray-100 transition-colors flex-1 overflow-hidden">
-                            {formData.file_mcu_id ? (
-                              <div className="w-5 h-5 rounded overflow-hidden border border-gray-100 shrink-0">
-                                  <img src={googleDriveService.getFileUrl(formData.file_mcu_id)} className="w-full h-full object-cover" />
-                              </div>
-                            ) : (
-                              <Upload size={12} className="text-gray-400 shrink-0" />
-                            )}
-                            <span className="text-[10px] text-gray-500 truncate">{formData.file_mcu_id ? 'Hasil MCU OK' : 'Upload PDF Hasil MCU'}</span>
-                            <input id="file_mcu_id" type="file" className="hidden" accept="image/*,application/pdf" onChange={(e) => handleFileUpload(e, 'file_mcu_id')} />
-                          </label>
-                          {uploading['file_mcu_id'] && <div className="w-4 h-4 border-2 border-[#006E62] border-t-transparent rounded-full animate-spin"></div>}
-                        </div>
-                      </div>
-                    )}
-                   </>
-                 )}
               </div>
             </div>
           </div>
