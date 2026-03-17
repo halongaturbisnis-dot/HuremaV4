@@ -24,6 +24,7 @@ import { googleDriveService } from '../../services/googleDriveService';
 
 // Import sub-modules
 import CareerLogMain from '../career/CareerLogMain';
+import HealthLogMain from '../health/HealthLogMain';
 import ContractMain from '../contract/ContractMain';
 import CertificationMain from '../certification/CertificationMain';
 import DisciplineMain from '../discipline/DisciplineMain';
@@ -51,7 +52,7 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
   const bulkImageInputRef = useRef<HTMLInputElement>(null);
 
   // Tab State Internal Modul Akun
-  const [activeSubTab, setActiveSubTab] = useState<'data' | 'career' | 'contract' | 'cert' | 'discipline'>('data');
+  const [activeSubTab, setActiveSubTab] = useState<'data' | 'career' | 'contract' | 'cert' | 'health' | 'discipline'>('data');
 
   useEffect(() => {
     if (isSelfProfile && user) {
@@ -746,6 +747,7 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
         <SubTab id="career" label="Log Karir" icon={History} />
         <SubTab id="contract" label="Kontrak Kerja" icon={FileBadge} />
         <SubTab id="cert" label="Sertifikasi" icon={Award} />
+        <SubTab id="health" label="Log Kesehatan" icon={Activity} />
         <SubTab id="discipline" label="Peringatan & Keluar" icon={ShieldAlert} />
       </div>
 
@@ -955,6 +957,10 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
       ) : activeSubTab === 'cert' ? (
         <div className="animate-in fade-in duration-300">
           <CertificationMain />
+        </div>
+      ) : activeSubTab === 'health' ? (
+        <div className="animate-in fade-in duration-300">
+          <HealthLogMain />
         </div>
       ) : activeSubTab === 'discipline' ? (
         <div className="animate-in fade-in duration-300">

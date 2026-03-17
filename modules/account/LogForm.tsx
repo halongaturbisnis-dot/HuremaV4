@@ -5,9 +5,10 @@ import { googleDriveService } from '../../services/googleDriveService';
 import { accountService } from '../../services/accountService';
 import { scheduleService } from '../../services/scheduleService';
 import { Location, Schedule } from '../../types';
+import Swal from 'sweetalert2';
 
 interface LogFormProps {
-  type: 'career';
+  type: 'career' | 'health';
   accountId: string;
   initialData?: any; // Ini bisa data akun (untuk add) atau data log (untuk edit)
   isEdit?: boolean;
@@ -25,6 +26,10 @@ const LogForm: React.FC<LogFormProps> = ({ type, accountId, initialData, isEdit 
     location_name: initialData?.location_name || (initialData?.location?.name || ''),
     schedule_id: (initialData as any)?.schedule_id || '',
     file_sk_id: initialData?.file_sk_id || '',
+    // Health Fields
+    mcu_status: initialData?.mcu_status || '',
+    health_risk: initialData?.health_risk || '',
+    file_mcu_id: initialData?.file_mcu_id || '',
     // Common
     notes: initialData?.notes || '',
     change_date: initialData?.change_date ? initialData.change_date.split('T')[0] : new Date().toISOString().split('T')[0],
@@ -45,8 +50,8 @@ const LogForm: React.FC<LogFormProps> = ({ type, accountId, initialData, isEdit 
   useEffect(() => {
     if (type === 'career') {
       locationService.getAll().then(setLocations);
+      accountService.getDistinctAttributes().then(setSuggestions);
     }
-    accountService.getDistinctAttributes().then(setSuggestions);
 
     // Close dropdowns on click outside
     const handleClickOutside = (event: MouseEvent) => {
@@ -105,10 +110,12 @@ const LogForm: React.FC<LogFormProps> = ({ type, accountId, initialData, isEdit 
 
     setUploading(true);
     try {
-      const fileId = await googleDriveService.uploadFile(file);
-      setFormData(prev => ({ ...prev, file_sk_id: fileId }));
+      const folderName = type === 'career' ? 'SK_KARYAWAN' : 'MCU_KARYAWAN';
+      const fileId = await googleDriveService.uploadFile(file, folderName);
+      setFormData(prev => ({ ...prev, [type === 'career' ? 'file_sk_id' : 'file_mcu_id']: fileId }));
+      Swal.fire({ title: 'Berhasil!', text: 'File telah diunggah ke Google Drive.', icon: 'success', timer: 1000, showConfirmButton: false });
     } catch (error) {
-      alert('Gagal mengunggah dokumen.');
+      Swal.fire('Gagal', 'Gagal mengunggah file', 'error');
     } finally {
       setUploading(false);
     }
@@ -151,6 +158,13 @@ const LogForm: React.FC<LogFormProps> = ({ type, accountId, initialData, isEdit 
         schedule_type: finalScheduleType, // Service will update the main account schedule_type
         file_sk_id: formData.file_sk_id
       };
+    } else if (type === 'health') {
+      finalPayload = {
+        ...finalPayload,
+        mcu_status: formData.mcu_status,
+        health_risk: formData.health_risk,
+        file_mcu_id: formData.file_mcu_id
+      };
     }
 
     if (isEdit) {
@@ -177,7 +191,7 @@ const LogForm: React.FC<LogFormProps> = ({ type, accountId, initialData, isEdit 
         <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-[#006E62]">
-              {isEdit ? 'Ubah' : 'Tambah'} Riwayat Karir
+              {isEdit ? 'Ubah' : 'Tambah'} Riwayat {type === 'career' ? 'Karir' : 'Kesehatan'}
             </h3>
             <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Pencatatan Riwayat Manual</p>
           </div>
@@ -202,6 +216,8 @@ const LogForm: React.FC<LogFormProps> = ({ type, accountId, initialData, isEdit 
             </div>
           </div>
 
+          {type === 'career' ? (
+            <>
           <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1 relative" ref={posRef}>
                   <label htmlFor="position" className="text-[9px] font-bold text-gray-500 uppercase">Jabatan</label>
@@ -330,6 +346,50 @@ const LogForm: React.FC<LogFormProps> = ({ type, accountId, initialData, isEdit 
                   </label>
                 </div>
               </div>
+            </>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label htmlFor="mcu_status" className="text-[9px] font-bold text-gray-500 uppercase">Status Medis / MCU</label>
+                  <select id="mcu_status" required name="mcu_status" value={formData.mcu_status} onChange={handleChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded outline-none focus:ring-1 focus:ring-[#006E62] bg-white">
+                    <option value="">-- Pilih Status --</option>
+                    <option value="FIT">FIT</option>
+                    <option value="FIT WITH NOTE">FIT WITH NOTE</option>
+                    <option value="UNFIT">UNFIT</option>
+                    <option value="PENDING">PENDING</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="health_risk" className="text-[9px] font-bold text-gray-500 uppercase">Risiko Kesehatan</label>
+                  <select id="health_risk" required name="health_risk" value={formData.health_risk} onChange={handleChange} className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded outline-none focus:ring-1 focus:ring-[#006E62] bg-white">
+                    <option value="">-- Pilih Risiko --</option>
+                    <option value="LOW">LOW</option>
+                    <option value="MEDIUM">MEDIUM</option>
+                    <option value="HIGH">HIGH</option>
+                    <option value="VERY HIGH">VERY HIGH</option>
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="file_mcu_id" className="text-[9px] font-bold text-gray-500 uppercase">Upload Hasil MCU (PDF/Gambar)</label>
+                <div className={`flex items-center gap-3 p-2 bg-gray-50 border border-dashed rounded cursor-pointer hover:bg-white transition-colors ${formData.file_mcu_id ? 'border-red-500' : 'border-gray-200'}`}>
+                  <label htmlFor="file_mcu_id" className="flex items-center gap-2 cursor-pointer w-full">
+                    <div className="p-2 bg-white rounded border border-gray-100 shrink-0">
+                      <Upload size={14} className={formData.file_mcu_id ? 'text-red-500' : 'text-gray-300'} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-bold text-gray-600 uppercase">
+                        {uploading ? 'Sedang Mengunggah...' : formData.file_mcu_id ? 'Hasil MCU Terunggah' : 'Upload Hasil MCU'}
+                      </p>
+                      <p className="text-[8px] text-gray-400 truncate">{formData.file_mcu_id || 'ID akan tersimpan di G-Drive'}</p>
+                    </div>
+                    <input id="file_mcu_id" type="file" className="hidden" onChange={handleFileUpload} disabled={uploading} />
+                  </label>
+                </div>
+              </div>
+            </>
+          )}
 
           <div className="space-y-1">
             <label htmlFor="notes" className="text-[9px] font-bold text-gray-500 uppercase">Catatan Tambahan</label>
