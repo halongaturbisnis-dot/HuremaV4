@@ -183,9 +183,9 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({ onClose, onSubmit, initialD
                 <label className="text-[10px] font-bold text-gray-500 uppercase">Tipe Jadwal</label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { id: 1, label: '1. Hari Kerja (Fixed)' },
-                    { id: 2, label: '2. Shift Kerja (Uniform)' },
-                    { id: 3, label: '3. Libur Khusus (Overriding)' },
+                    { id: 1, label: '1. Hari Kerja' },
+                    { id: 2, label: '2. Shift Kerja' },
+                    { id: 3, label: '3. Libur Khusus' },
                     { id: 4, label: '4. Hari Kerja Khusus' }
                   ].map(type => (
                     <button
