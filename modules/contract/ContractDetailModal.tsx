@@ -27,6 +27,7 @@ const ContractDetailModal: React.FC<ContractDetailModalProps> = ({ contract, onC
 
   const isImg = contract.file_id ? isImage(contract.file_id) : false;
   const fileUrl = contract.file_id ? googleDriveService.getFileUrl(contract.file_id, isImg) : null;
+  const viewerUrl = contract.file_id ? googleDriveService.getViewerUrl(contract.file_id) : null;
 
   return (
     <div className="fixed inset-0 z-[250] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
@@ -80,9 +81,9 @@ const ContractDetailModal: React.FC<ContractDetailModalProps> = ({ contract, onC
                 <Paperclip size={16} className="text-[#006E62]" />
                 <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Lampiran Dokumen</h4>
               </div>
-              {fileUrl && (
+              {viewerUrl && (
                 <a 
-                  href={fileUrl} 
+                  href={viewerUrl} 
                   target="_blank" 
                   rel="noreferrer"
                   className="text-[10px] font-bold text-[#006E62] hover:underline flex items-center gap-1"
@@ -106,7 +107,7 @@ const ContractDetailModal: React.FC<ContractDetailModalProps> = ({ contract, onC
                     <FileText size={48} strokeWidth={1} />
                     <p className="text-[10px] font-bold uppercase tracking-widest">Dokumen PDF / Non-Gambar</p>
                     <a 
-                      href={fileUrl!} 
+                      href={viewerUrl!} 
                       target="_blank" 
                       rel="noreferrer"
                       className="px-6 py-2 bg-[#006E62] text-white rounded text-[10px] font-bold uppercase tracking-widest hover:bg-[#005a50] transition-colors shadow-md"

@@ -459,24 +459,6 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
                     <p className="text-[9px] text-gray-500 font-medium uppercase tracking-tighter">{c.contract_type}</p>
                     <div className="flex justify-between items-center mt-1">
                       <p className="text-[8px] text-gray-400 uppercase font-bold">{formatDate(c.start_date)} - {c.end_date ? formatDate(c.end_date) : 'TETAP'}</p>
-                      {c.file_id && (
-                        <button 
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            const isImg = c.file_id!.includes('|') ? /\.(jpg|jpeg|png|webp|gif|svg|bmp)$/i.test(c.file_id!.split('|')[1]) : true;
-                            const url = googleDriveService.getFileUrl(c.file_id!, isImg);
-                            
-                            if (isImg) {
-                              setPreviewMedia({ url, title: `Kontrak ${c.contract_number}`, type: 'image' }); 
-                            } else {
-                              window.open(url, '_blank');
-                            }
-                          }} 
-                          className="text-[#006E62] hover:text-[#005a50] flex items-center gap-0.5 text-[8px] font-bold"
-                        >
-                          <Paperclip size={10} /> DOK
-                        </button>
-                      )}
                     </div>
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -527,17 +509,6 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
                       <p className="text-[9px] text-gray-400 font-medium uppercase tracking-tighter">{log.location_name}</p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <p className="text-[8px] text-gray-400 font-bold uppercase">{formatDate(log.change_date)}</p>
-                        {log.file_sk_id && (
-                          <button 
-                            onClick={(e) => { 
-                              e.stopPropagation(); 
-                              window.open(googleDriveService.getViewerUrl(log.file_sk_id!), '_blank');
-                            }} 
-                            className="text-[#006E62] hover:text-[#005a50] flex items-center gap-0.5 text-[8px] font-bold"
-                          >
-                            <Paperclip size={10} /> SK
-                          </button>
-                        )}
                       </div>
                     </div>
                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -587,17 +558,6 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
                     <p className="text-[9px] text-gray-500 font-medium uppercase tracking-tighter">{cert.cert_type}</p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <p className="text-[8px] text-gray-400 font-bold uppercase">{formatDate(cert.cert_date)}</p>
-                      {cert.file_id && (
-                        <button 
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            window.open(googleDriveService.getViewerUrl(cert.file_id!), '_blank');
-                          }} 
-                          className="text-[#006E62] hover:text-[#005a50] flex items-center gap-0.5 text-[8px] font-bold"
-                        >
-                          <Paperclip size={10} /> FILE
-                        </button>
-                      )}
                     </div>
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -646,17 +606,6 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
                     <p className="text-[9px] text-gray-500 font-medium uppercase tracking-tighter">{log.health_risk}</p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <p className="text-[8px] text-gray-400 font-bold uppercase">{formatDate(log.change_date)}</p>
-                      {log.file_mcu_id && (
-                        <button 
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            window.open(googleDriveService.getViewerUrl(log.file_mcu_id!), '_blank');
-                          }} 
-                          className="text-[#006E62] hover:text-[#005a50] flex items-center gap-0.5 text-[8px] font-bold"
-                        >
-                          <Paperclip size={10} /> MCU
-                        </button>
-                      )}
                     </div>
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -704,17 +653,6 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
                     <p className="text-[10px] font-bold text-[#006E62] leading-tight">{w.warning_type}</p>
                     <p className="text-[8px] text-gray-400 uppercase font-bold">{formatDate(w.issue_date)}</p>
                     <p className="text-[10px] text-gray-600 mt-1 line-clamp-1 italic">"{w.reason}"</p>
-                    {w.file_id && (
-                      <button 
-                        onClick={(e) => { 
-                          e.stopPropagation(); 
-                          window.open(googleDriveService.getViewerUrl(w.file_id!), '_blank');
-                        }} 
-                        className="text-[#006E62] hover:text-[#005a50] flex items-center gap-0.5 text-[8px] font-bold mt-1"
-                      >
-                        <Paperclip size={10} /> LIHAT SURAT
-                      </button>
-                    )}
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     {!isReadOnly && (
@@ -754,17 +692,6 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
               )}
               {termination?.termination_type === 'Resign' && (
                 <DataRow label="Biaya Penalti" value={formatCurrency(termination.penalty_amount)} />
-              )}
-              {termination?.file_id && (
-                <button 
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
-                    window.open(googleDriveService.getViewerUrl(termination.file_id!), '_blank');
-                  }} 
-                  className="flex items-center gap-1.5 text-[11px] text-[#006E62] font-bold hover:underline"
-                >
-                  <Paperclip size={10} /> LIHAT SURAT PEMBERHENTIAN
-                </button>
               )}
               {!isReadOnly && (
                 <button 
