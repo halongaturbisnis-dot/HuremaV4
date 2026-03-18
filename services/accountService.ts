@@ -25,7 +25,7 @@ export const accountService = {
         *,
         location:locations(name)
       `)
-      .not('role', 'ilike', '%superadmin%')
+      .not('access_code', 'ilike', '%SPADMIN%')
       .order('created_at', { ascending: false });
     
     if (error) {

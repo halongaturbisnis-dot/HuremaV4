@@ -22,13 +22,13 @@ export const contractService = {
       .from('account_contracts')
       .select(`
         *,
-        account:accounts(full_name, internal_nik, role)
+        account:accounts(full_name, internal_nik, role, access_code)
       `)
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    // Filter out logs where account role is superadmin (case-insensitive)
-    return (data as any[]).filter(log => !log.account?.role?.toLowerCase().includes('superadmin')) as AccountContractExtended[];
+    // Filter out logs where account access_code contains SPADMIN (case-insensitive)
+    return (data as any[]).filter(log => !log.account?.access_code?.toUpperCase().includes('SPADMIN')) as AccountContractExtended[];
   },
 
   async getByAccountId(accountId: string) {

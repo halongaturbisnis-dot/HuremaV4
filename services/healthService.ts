@@ -11,13 +11,13 @@ export const healthService = {
       .from('account_health_logs')
       .select(`
         *,
-        account:accounts(full_name, internal_nik, role)
+        account:accounts(full_name, internal_nik, role, access_code)
       `)
       .order('change_date', { ascending: false });
     
     if (error) throw error;
-    // Filter out logs where account role is superadmin (case-insensitive)
-    return (data as any[]).filter(log => !log.account?.role?.toLowerCase().includes('superadmin')) as HealthLogExtended[];
+    // Filter out logs where account access_code contains SPADMIN (case-insensitive)
+    return (data as any[]).filter(log => !log.account?.access_code?.toUpperCase().includes('SPADMIN')) as HealthLogExtended[];
   },
 
   async downloadTemplate() {
@@ -26,7 +26,7 @@ export const healthService = {
       .from('accounts')
       .select('id, internal_nik, full_name')
       .is('end_date', null)
-      .not('role', 'ilike', '%superadmin%');
+      .not('access_code', 'ilike', '%SPADMIN%');
 
     if (error) throw error;
 
