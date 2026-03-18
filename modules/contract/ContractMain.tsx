@@ -182,12 +182,12 @@ const ContractMain: React.FC = () => {
                   <td className="px-6 py-4">
                     {c.file_id ? (
                       <a 
-                        href={googleDriveService.getFileUrl(c.file_id).replace('=s1600', '=s0')} 
+                        href={googleDriveService.getFileUrl(c.file_id, true)} 
                         target="_blank" 
                         rel="noreferrer"
                         className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#006E62] bg-emerald-50 px-2 py-1 rounded hover:bg-emerald-100 transition-colors"
                       >
-                        <Paperclip size={12} /> LIHAT PDF
+                        <Paperclip size={12} /> LIHAT {c.file_id.includes('|') && !/\.(jpg|jpeg|png|webp|gif|svg|bmp)$/i.test(c.file_id.split('|')[1]) ? 'PDF' : 'DOKUMEN'}
                       </a>
                     ) : (
                       <label className="inline-flex items-center gap-1.5 text-[10px] font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded cursor-pointer hover:bg-orange-100 transition-colors">

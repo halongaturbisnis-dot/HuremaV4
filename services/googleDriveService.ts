@@ -32,7 +32,7 @@ class GoogleDriveService {
           throw new Error('ID File tidak ditemukan dalam respon API Google Drive');
         }
 
-        return result.id;
+        return `${result.id}|${file.name}`;
       } catch (error) {
         console.error('GoogleDriveService Upload Error:', error);
         throw error;
@@ -53,23 +53,24 @@ class GoogleDriveService {
    * Jika formatnya 'id|filename', akan dicek ekstensinya.
    * Jika gambar, gunakan lh3.googleusercontent. Jika bukan, gunakan Google Drive viewer.
    */
-  getFileUrl(fileId: string): string {
+  getFileUrl(fileId: string, fullSize: boolean = false): string {
     if (!fileId) return '';
     
-    // Jika formatnya 'id|filename'
+    let id = fileId;
+    let name = '';
     if (fileId.includes('|')) {
-      const [id, name] = fileId.split('|');
-      const isImage = /\.(jpg|jpeg|png|webp|gif|svg|bmp)$/i.test(name);
-      
-      if (isImage) {
-        return `https://lh3.googleusercontent.com/d/${id}=s1600`;
-      }
-      // Untuk non-image, buka via Google Drive viewer
-      return `https://drive.google.com/file/d/${id}/view`;
+      [id, name] = fileId.split('|');
     }
 
-    // Fallback untuk data lama atau ID murni (default ke lh3 agar tidak memecah tampilan gambar profil/presensi)
-    return `https://lh3.googleusercontent.com/d/${fileId}=s1600`;
+    // Jika tidak ada nama (data lama), default ke image untuk keamanan tampilan profil/presensi
+    // Namun untuk kontrak, kita akan menangani di level UI jika perlu default ke document
+    const isImage = !name || /\.(jpg|jpeg|png|webp|gif|svg|bmp)$/i.test(name);
+    
+    if (isImage) {
+      return `https://lh3.googleusercontent.com/d/${id}=s${fullSize ? '0' : '1600'}`;
+    }
+    // Untuk non-image, buka via Google Drive viewer
+    return `https://drive.google.com/file/d/${id}/view`;
   }
 }
 

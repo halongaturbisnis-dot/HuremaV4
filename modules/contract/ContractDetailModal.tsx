@@ -25,8 +25,8 @@ const ContractDetailModal: React.FC<ContractDetailModalProps> = ({ contract, onC
     return /\.(jpg|jpeg|png|webp|gif|svg|bmp)$/i.test(name);
   };
 
-  const fileUrl = contract.file_id ? googleDriveService.getFileUrl(contract.file_id) : null;
   const isImg = contract.file_id ? isImage(contract.file_id) : false;
+  const fileUrl = contract.file_id ? googleDriveService.getFileUrl(contract.file_id, isImg) : null;
 
   return (
     <div className="fixed inset-0 z-[250] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
@@ -82,7 +82,7 @@ const ContractDetailModal: React.FC<ContractDetailModalProps> = ({ contract, onC
               </div>
               {fileUrl && (
                 <a 
-                  href={fileUrl.replace('=s1600', '=s0')} 
+                  href={fileUrl} 
                   target="_blank" 
                   rel="noreferrer"
                   className="text-[10px] font-bold text-[#006E62] hover:underline flex items-center gap-1"

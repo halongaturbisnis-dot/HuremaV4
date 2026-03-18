@@ -453,7 +453,14 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
                         <button 
                           onClick={(e) => { 
                             e.stopPropagation(); 
-                            setPreviewMedia({ url: googleDriveService.getFileUrl(c.file_id!).replace('=s1600', '=s0'), title: `Kontrak ${c.contract_number}`, type: 'image' }); 
+                            const isImg = c.file_id!.includes('|') ? /\.(jpg|jpeg|png|webp|gif|svg|bmp)$/i.test(c.file_id!.split('|')[1]) : true;
+                            const url = googleDriveService.getFileUrl(c.file_id!, isImg);
+                            
+                            if (isImg) {
+                              setPreviewMedia({ url, title: `Kontrak ${c.contract_number}`, type: 'image' }); 
+                            } else {
+                              window.open(url, '_blank');
+                            }
                           }} 
                           className="text-[#006E62] hover:text-[#005a50] flex items-center gap-0.5 text-[8px] font-bold"
                         >
