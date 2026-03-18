@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Award, Search, Paperclip, UserCircle, Upload, Calendar, FileUp, Download } from 'lucide-react';
+import { Award, Search, Paperclip, UserCircle, Upload, Calendar, FileUp, Download, Trash2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { certificationService } from '../../services/certificationService';
 import { googleDriveService } from '../../services/googleDriveService';
@@ -14,6 +14,7 @@ const CertificationMain: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showImportModal, setShowImportModal] = useState(false);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   useEffect(() => {
     fetchCerts();
@@ -63,6 +64,77 @@ const CertificationMain: React.FC = () => {
     });
   };
 
+  const handleDelete = async (id: string) => {
+    const result = await Swal.fire({
+      title: 'Hapus Sertifikasi?',
+      text: "Data ini akan dihapus permanen dari sistem.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Ya, Hapus',
+      cancelButtonText: 'Batal'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        setIsLoading(true);
+        await certificationService.delete(id);
+        setCerts(prev => prev.filter(c => c.id !== id));
+        setSelectedIds(prev => prev.filter(sid => sid !== id));
+        Swal.fire('Terhapus!', 'Sertifikasi telah dihapus.', 'success');
+      } catch (error) {
+        Swal.fire('Gagal', 'Gagal menghapus sertifikasi', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+
+    const result = await Swal.fire({
+      title: 'Hapus Masal?',
+      text: `Apakah Anda yakin ingin menghapus ${selectedIds.length} sertifikasi terpilih secara permanen?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Ya, Hapus Semua',
+      cancelButtonText: 'Batal'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        setIsLoading(true);
+        await certificationService.bulkDelete(selectedIds);
+        setCerts(prev => prev.filter(c => !selectedIds.includes(c.id)));
+        setSelectedIds([]);
+        Swal.fire('Berhasil!', 'Data terpilih telah dihapus.', 'success');
+      } catch (error) {
+        Swal.fire('Gagal', 'Beberapa data mungkin gagal dihapus.', 'error');
+        fetchCerts();
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredCerts.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredCerts.map(c => c.id));
+    }
+  };
+
   return (
     <div className="space-y-6">
       {uploadingId && <LoadingSpinner message="Mengunggah Dokumen..." />}
@@ -103,6 +175,14 @@ const CertificationMain: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-2">
+          {selectedIds.length > 0 && (
+            <button 
+              onClick={handleBulkDelete}
+              className="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-md border border-red-100 hover:bg-red-100 transition-all text-sm font-medium mr-2"
+            >
+              <Trash2 size={18} /> Hapus ({selectedIds.length})
+            </button>
+          )}
           <button onClick={() => certificationService.downloadTemplate()} className="flex items-center gap-2 border border-gray-200 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors text-sm font-medium text-gray-600">
             <Download size={18} /> Unduh Template
           </button>
@@ -116,58 +196,87 @@ const CertificationMain: React.FC = () => {
         <table className="w-full text-left border-collapse">
           <thead className="bg-gray-50 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100">
             <tr>
+              <th className="px-6 py-4 w-10">
+                <input 
+                  type="checkbox" 
+                  className="rounded border-gray-300 text-[#006E62] focus:ring-[#006E62]"
+                  checked={selectedIds.length === filteredCerts.length && filteredCerts.length > 0}
+                  onChange={toggleSelectAll}
+                />
+              </th>
               <th className="px-6 py-4">Karyawan</th>
               <th className="px-6 py-4">Sertifikasi</th>
               <th className="px-6 py-4">Tanggal</th>
               <th className="px-6 py-4">Dokumen</th>
+              <th className="px-6 py-4 text-right">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {isLoading ? (
-              <tr><td colSpan={5} className="text-center py-20 text-gray-400">Memuat data sertifikasi...</td></tr>
+              <tr><td colSpan={6} className="text-center py-20 text-gray-400">Memuat data sertifikasi...</td></tr>
             ) : filteredCerts.length === 0 ? (
-              <tr><td colSpan={5} className="text-center py-20 text-gray-400">Tidak ada data sertifikasi ditemukan.</td></tr>
+              <tr><td colSpan={6} className="text-center py-20 text-gray-400">Tidak ada data sertifikasi ditemukan.</td></tr>
             ) : (
-              filteredCerts.map(c => (
-                <tr key={c.id} className="hover:bg-gray-50/50 transition-colors group">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-emerald-50 text-[#006E62] flex items-center justify-center border border-emerald-100">
-                        <UserCircle size={20} />
+              filteredCerts.map(c => {
+                const isSelected = selectedIds.includes(c.id);
+                return (
+                  <tr key={c.id} className={`hover:bg-gray-50/50 transition-colors group ${isSelected ? 'bg-emerald-50/20' : ''}`}>
+                    <td className="px-6 py-4">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-gray-300 text-[#006E62] focus:ring-[#006E62]"
+                        checked={isSelected}
+                        onChange={() => toggleSelect(c.id)}
+                      />
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-emerald-50 text-[#006E62] flex items-center justify-center border border-emerald-100">
+                          <UserCircle size={20} />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-gray-800">{c.account?.full_name}</div>
+                          <div className="text-[10px] text-gray-400 font-mono uppercase">{c.account?.internal_nik}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-xs font-bold text-gray-800">{c.account?.full_name}</div>
-                        <div className="text-[10px] text-gray-400 font-mono uppercase">{c.account?.internal_nik}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-xs font-bold text-[#006E62]">{c.cert_name}</div>
-                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">{c.cert_type}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-xs text-gray-600 font-medium">{formatDate(c.cert_date)}</div>
-                    <div className="text-[9px] text-gray-400 uppercase font-bold">Entry: {formatDate(c.entry_date)}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    {c.file_id ? (
-                      <a 
-                        href={googleDriveService.getFileUrl(c.file_id).replace('=s1600', '=s0')} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#006E62] bg-emerald-50 px-2 py-1 rounded hover:bg-emerald-100 transition-colors"
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-xs font-bold text-[#006E62]">{c.cert_name}</div>
+                      <div className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">{c.cert_type}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-xs text-gray-600 font-medium">{formatDate(c.cert_date)}</div>
+                      <div className="text-[9px] text-gray-400 uppercase font-bold">Entry: {formatDate(c.entry_date)}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {c.file_id ? (
+                        <a 
+                          href={googleDriveService.getFileUrl(c.file_id).replace('=s1600', '=s0')} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#006E62] bg-emerald-50 px-2 py-1 rounded hover:bg-emerald-100 transition-colors"
+                        >
+                          <Paperclip size={12} /> LIHAT FILE
+                        </a>
+                      ) : (
+                        <label className="inline-flex items-center gap-1.5 text-[10px] font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded cursor-pointer hover:bg-orange-100 transition-colors">
+                          <Upload size={12} /> UPLOAD
+                          <input type="file" className="hidden" accept="image/*,application/pdf" onChange={(e) => handleManualUpload(e, c)} />
+                        </label>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button 
+                        onClick={() => handleDelete(c.id)}
+                        className="p-1.5 text-red-400 hover:text-red-600 transition-colors"
+                        title="Hapus Sertifikasi"
                       >
-                        <Paperclip size={12} /> LIHAT FILE
-                      </a>
-                    ) : (
-                      <label className="inline-flex items-center gap-1.5 text-[10px] font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded cursor-pointer hover:bg-orange-100 transition-colors">
-                        <Upload size={12} /> UPLOAD
-                        <input type="file" className="hidden" accept="image/*,application/pdf" onChange={(e) => handleManualUpload(e, c)} />
-                      </label>
-                    )}
-                  </td>
-                </tr>
-              ))
+                        <Trash2 size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

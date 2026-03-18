@@ -4,8 +4,6 @@ import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { accountService } from './accountService';
-import { locationService } from './locationService';
-import { scheduleService } from './scheduleService';
 
 export const careerService = {
   async getAllGlobal() {
@@ -23,27 +21,19 @@ export const careerService = {
   },
 
   async downloadTemplate() {
-    // Optimasi: Gunakan query spesifik untuk mencegah lag saat fetching data besar
-    const [accRes, locRes, schRes] = await Promise.all([
-      supabase.from('accounts').select('id, internal_nik, full_name').is('end_date', null).not('access_code', 'ilike', '%SPADMIN%'),
-      locationService.getAll(),
-      scheduleService.getAll()
-    ]);
+    // Optimasi: Hanya ambil data minimal untuk mencegah lag saat download
+    const { data: accounts, error } = await supabase
+      .from('accounts')
+      .select('id, internal_nik, full_name')
+      .is('end_date', null)
+      .not('access_code', 'ilike', '%SPADMIN%');
 
-    const accounts = accRes.data || [];
-    const locations = locRes || [];
-    const schedules = schRes || [];
+    if (error) throw error;
 
     const workbook = new ExcelJS.Workbook();
     const wsImport = workbook.addWorksheet('Career_Import');
-    const wsLoc = workbook.addWorksheet('Ref_Locations');
-    const wsSch = workbook.addWorksheet('Ref_Schedules');
-
-    locations.forEach(l => wsLoc.addRow([l.id, l.name]));
-    schedules.forEach(s => wsSch.addRow([s.id, s.name]));
-
-    const instructionText = "Hapus baris data akun/user yg tidak ingin diubah. Baris dengan (*) wajib diisi.";
-    wsImport.addRow([instructionText]); 
+    
+    wsImport.addRow(["Harap isi data riwayat karir terbaru karyawan. Baris dengan (*) wajib diisi."]);
     wsImport.addRow(['']); 
     
     const headers = [
@@ -52,50 +42,37 @@ export const careerService = {
       'Nama Karyawan', 
       'Jabatan Baru (*)', 
       'Grade Baru (*)', 
-      'Lokasi Baru (*)', 
-      'Jadwal Baru (*)', 
-      'Tanggal Efektif (YYYY-MM-DD) (*)', 
-      'Keterangan', 
-      'Link SK Google Drive (Opsional)'
+      'ID Lokasi (*)', 
+      'Nama Lokasi (*)', 
+      'ID Jadwal (*)', 
+      'Tanggal Perubahan (YYYY-MM-DD) (*)', 
+      'Catatan / Keterangan', 
+      'Link SK G-Drive (Opsional)'
     ];
-    wsImport.addRow(headers); 
+    wsImport.addRow(headers);
 
     const headerRow = wsImport.getRow(3);
     headerRow.font = { bold: true };
 
-    accounts.forEach(acc => {
-      wsImport.addRow([acc.id, acc.internal_nik, acc.full_name, '', '', '', '', '', '', '']);
+    accounts?.forEach(acc => {
+      wsImport.addRow([acc.id, acc.internal_nik, acc.full_name, '', '', '', '', '', '', '', '']);
     });
 
     const rowCount = wsImport.rowCount;
-    // Optimasi: Loop hanya pada baris yang valid ada data karyawan
+    // Optimasi: Loop hanya pada baris yang memiliki data
     for (let i = 4; i <= rowCount; i++) {
-      wsImport.getCell(`F${i}`).dataValidation = {
-        type: 'list',
-        allowBlank: true,
-        formulae: [`Ref_Locations!$B$1:$B$${locations.length}`],
-        showErrorMessage: true
-      };
-      
-      wsImport.getCell(`G${i}`).dataValidation = {
-        type: 'list',
-        allowBlank: true,
-        formulae: [`Ref_Schedules!$B$1:$B$${schedules.length}`],
-        showErrorMessage: true
-      };
-
-      const cellH = wsImport.getCell(`H${i}`);
-      cellH.dataValidation = {
+      const cellI = wsImport.getCell(`I${i}`);
+      cellI.dataValidation = {
         type: 'date',
         operator: 'greaterThan',
         allowBlank: true,
         formulae: [new Date(1900, 0, 1)]
       };
-      cellH.numFmt = 'yyyy-mm-dd';
+      cellI.numFmt = 'yyyy-mm-dd';
     }
 
     wsImport.columns.forEach((col, idx) => {
-      col.width = [20, 15, 25, 20, 15, 25, 25, 22, 25, 30][idx];
+      col.width = [20, 15, 25, 20, 15, 15, 20, 15, 22, 25, 30][idx];
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
@@ -109,19 +86,10 @@ export const careerService = {
         try {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
           const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData = XLSX.utils.sheet_to_json(firstSheet, { range: 2 });
-
-          const [locations, schedules] = await Promise.all([
-            locationService.getAll(),
-            scheduleService.getAll()
-          ]);
+          const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { range: 2 });
 
           const results = jsonData.map((row: any) => {
-            const loc = locations.find(l => l.name === row['Lokasi Baru (*)']);
-            const sch = schedules.find(s => s.name === row['Jadwal Baru (*)']);
-            
-            let effectiveDate = row['Tanggal Efektif (YYYY-MM-DD) (*)'];
+            let effectiveDate = row['Tanggal Perubahan (YYYY-MM-DD) (*)'];
             if (typeof effectiveDate === 'number') {
               effectiveDate = new Date((effectiveDate - 25569) * 86400 * 1000).toISOString().split('T')[0];
             }
@@ -129,19 +97,17 @@ export const careerService = {
             return {
               account_id: row['Account ID (Hidden)'],
               full_name: row['Nama Karyawan'],
-              internal_nik: row['NIK Internal'],
               position: row['Jabatan Baru (*)'],
               grade: row['Grade Baru (*)'],
-              location_id: loc?.id || null,
-              location_name: row['Lokasi Baru (*)'],
-              schedule_id: sch?.id || null,
+              location_id: row['ID Lokasi (*)'],
+              location_name: row['Nama Lokasi (*)'],
+              schedule_id: row['ID Jadwal (*)'],
               change_date: effectiveDate,
-              notes: row['Keterangan'] || null,
-              file_sk_link: row['Link SK Google Drive (Opsional)'] || null,
-              isValid: !!(row['Account ID (Hidden)'] && row['Jabatan Baru (*)'] && row['Lokasi Baru (*)'] && effectiveDate)
+              notes: row['Catatan / Keterangan'] || null,
+              file_sk_link: row['Link SK G-Drive (Opsional)'] || null,
+              isValid: !!(row['Account ID (Hidden)'] && row['Jabatan Baru (*)'] && row['Grade Baru (*)'] && row['ID Lokasi (*)'] && row['Nama Lokasi (*)'] && row['ID Jadwal (*)'] && effectiveDate)
             };
           });
-
           resolve(results);
         } catch (err) { reject(err); }
       };
@@ -164,5 +130,16 @@ export const careerService = {
         file_sk_id: item.file_sk_link ? item.file_sk_link.match(/[-\w]{25,}/)?.[0] : null
       });
     }
+  },
+
+  async delete(id: string) {
+    return accountService.deleteCareerLog(id);
+  },
+
+  async bulkDelete(ids: string[]) {
+    for (const id of ids) {
+      await this.delete(id);
+    }
+    return true;
   }
 };

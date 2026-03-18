@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { History, Search, Filter, Download, FileUp, Paperclip, ExternalLink, UserCircle, Upload } from 'lucide-react';
+import { History, Search, Filter, Download, FileUp, Paperclip, ExternalLink, UserCircle, Upload, Trash2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { careerService } from '../../services/careerService';
 import { googleDriveService } from '../../services/googleDriveService';
@@ -14,6 +14,7 @@ const CareerLogMain: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showImportModal, setShowImportModal] = useState(false);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   useEffect(() => {
     fetchLogs();
@@ -62,6 +63,77 @@ const CareerLogMain: React.FC = () => {
     });
   };
 
+  const handleDelete = async (id: string) => {
+    const result = await Swal.fire({
+      title: 'Hapus Log?',
+      text: "Data ini akan dihapus permanen dari sistem.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Ya, Hapus',
+      cancelButtonText: 'Batal'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        setIsLoading(true);
+        await careerService.delete(id);
+        setLogs(prev => prev.filter(l => l.id !== id));
+        setSelectedIds(prev => prev.filter(sid => sid !== id));
+        Swal.fire('Terhapus!', 'Log karir telah dihapus.', 'success');
+      } catch (error) {
+        Swal.fire('Gagal', 'Gagal menghapus log', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+
+    const result = await Swal.fire({
+      title: 'Hapus Masal?',
+      text: `Apakah Anda yakin ingin menghapus ${selectedIds.length} log terpilih secara permanen?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Ya, Hapus Semua',
+      cancelButtonText: 'Batal'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        setIsLoading(true);
+        await careerService.bulkDelete(selectedIds);
+        setLogs(prev => prev.filter(l => !selectedIds.includes(l.id)));
+        setSelectedIds([]);
+        Swal.fire('Berhasil!', 'Data terpilih telah dihapus.', 'success');
+      } catch (error) {
+        Swal.fire('Gagal', 'Beberapa data mungkin gagal dihapus.', 'error');
+        fetchLogs();
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredLogs.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredLogs.map(l => l.id));
+    }
+  };
+
   return (
     <div className="space-y-6">
       {uploadingId && <LoadingSpinner message="Mengunggah SK..." />}
@@ -79,6 +151,14 @@ const CareerLogMain: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-2">
+          {selectedIds.length > 0 && (
+            <button 
+              onClick={handleBulkDelete}
+              className="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-md border border-red-100 hover:bg-red-100 transition-all text-sm font-medium mr-2"
+            >
+              <Trash2 size={18} /> Hapus ({selectedIds.length})
+            </button>
+          )}
           <button 
             onClick={() => careerService.downloadTemplate()}
             className="flex items-center gap-2 border border-gray-200 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors text-sm font-medium text-gray-600"
@@ -98,61 +178,90 @@ const CareerLogMain: React.FC = () => {
         <table className="w-full text-left border-collapse">
           <thead className="bg-gray-50 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100">
             <tr>
+              <th className="px-6 py-4 w-10">
+                <input 
+                  type="checkbox" 
+                  className="rounded border-gray-300 text-[#006E62] focus:ring-[#006E62]"
+                  checked={selectedIds.length === filteredLogs.length && filteredLogs.length > 0}
+                  onChange={toggleSelectAll}
+                />
+              </th>
               <th className="px-6 py-4">Karyawan</th>
               <th className="px-6 py-4">Perubahan Karir</th>
               <th className="px-6 py-4">Penempatan</th>
               <th className="px-6 py-4">Tgl Efektif</th>
               <th className="px-6 py-4">Dokumen SK</th>
+              <th className="px-6 py-4 text-right">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {isLoading ? (
-              <tr><td colSpan={5} className="text-center py-20 text-gray-400">Memuat data log...</td></tr>
+              <tr><td colSpan={7} className="text-center py-20 text-gray-400">Memuat data log...</td></tr>
             ) : filteredLogs.length === 0 ? (
-              <tr><td colSpan={5} className="text-center py-20 text-gray-400">Tidak ada log karir ditemukan.</td></tr>
+              <tr><td colSpan={7} className="text-center py-20 text-gray-400">Tidak ada log karir ditemukan.</td></tr>
             ) : (
-              filteredLogs.map(log => (
-                <tr key={log.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-emerald-50 text-[#006E62] flex items-center justify-center border border-emerald-100">
-                        <UserCircle size={20} />
+              filteredLogs.map(log => {
+                const isSelected = selectedIds.includes(log.id);
+                return (
+                  <tr key={log.id} className={`hover:bg-gray-50/50 transition-colors ${isSelected ? 'bg-emerald-50/20' : ''}`}>
+                    <td className="px-6 py-4">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-gray-300 text-[#006E62] focus:ring-[#006E62]"
+                        checked={isSelected}
+                        onChange={() => toggleSelect(log.id)}
+                      />
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-emerald-50 text-[#006E62] flex items-center justify-center border border-emerald-100">
+                          <UserCircle size={20} />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-gray-800">{log.account?.full_name}</div>
+                          <div className="text-[10px] text-gray-400 font-mono uppercase">{log.account?.internal_nik}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-xs font-bold text-gray-800">{log.account?.full_name}</div>
-                        <div className="text-[10px] text-gray-400 font-mono uppercase">{log.account?.internal_nik}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-xs font-bold text-[#006E62]">{log.position}</div>
-                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Grade: {log.grade || '-'}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-xs text-gray-600 font-medium">{log.location_name}</div>
-                  </td>
-                  <td className="px-6 py-4 text-xs font-bold text-gray-500">
-                    {formatDate(log.change_date)}
-                  </td>
-                  <td className="px-6 py-4">
-                    {log.file_sk_id ? (
-                      <a 
-                        href={googleDriveService.getFileUrl(log.file_sk_id).replace('=s1600', '=s0')} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#006E62] bg-emerald-50 px-2 py-1 rounded hover:bg-emerald-100 transition-colors"
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-xs font-bold text-[#006E62]">{log.position}</div>
+                      <div className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Grade: {log.grade || '-'}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-xs text-gray-600 font-medium">{log.location_name}</div>
+                    </td>
+                    <td className="px-6 py-4 text-xs font-bold text-gray-500">
+                      {formatDate(log.change_date)}
+                    </td>
+                    <td className="px-6 py-4">
+                      {log.file_sk_id ? (
+                        <a 
+                          href={googleDriveService.getFileUrl(log.file_sk_id).replace('=s1600', '=s0')} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#006E62] bg-emerald-50 px-2 py-1 rounded hover:bg-emerald-100 transition-colors"
+                        >
+                          <Paperclip size={12} /> LIHAT SK
+                        </a>
+                      ) : (
+                        <label className="inline-flex items-center gap-1.5 text-[10px] font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded cursor-pointer hover:bg-orange-100 transition-colors">
+                          <Upload size={12} /> LAMPIRKAN SK
+                          <input type="file" className="hidden" accept="image/*,application/pdf" onChange={(e) => handleManualUploadSK(e, log)} />
+                        </label>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button 
+                        onClick={() => handleDelete(log.id)}
+                        className="p-1.5 text-red-400 hover:text-red-600 transition-colors"
+                        title="Hapus Log"
                       >
-                        <Paperclip size={12} /> LIHAT SK
-                      </a>
-                    ) : (
-                      <label className="inline-flex items-center gap-1.5 text-[10px] font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded cursor-pointer hover:bg-orange-100 transition-colors">
-                        <Upload size={12} /> LAMPIRKAN SK
-                        <input type="file" className="hidden" accept="image/*,application/pdf" onChange={(e) => handleManualUploadSK(e, log)} />
-                      </label>
-                    )}
-                  </td>
-                </tr>
-              ))
+                        <Trash2 size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

@@ -81,11 +81,28 @@ export const contractService = {
   },
 
   async delete(id: string) {
+    // 1. Ambil ID file
+    const { data } = await supabase.from('account_contracts').select('file_id').eq('id', id).single();
+    
+    // 2. Hapus file dari Drive
+    if (data?.file_id) {
+      const { googleDriveService } = await import('./googleDriveService');
+      await googleDriveService.deleteFile(data.file_id);
+    }
+
+    // 3. Hapus dari DB
     const { error } = await supabase
       .from('account_contracts')
       .delete()
       .eq('id', id);
     if (error) throw error;
+    return true;
+  },
+
+  async bulkDelete(ids: string[]) {
+    for (const id of ids) {
+      await this.delete(id);
+    }
     return true;
   },
 

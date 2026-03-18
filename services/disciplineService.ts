@@ -49,8 +49,25 @@ export const disciplineService = {
   },
 
   async deleteWarning(id: string) {
+    // 1. Ambil ID file
+    const { data } = await supabase.from('account_warning_logs').select('file_id').eq('id', id).single();
+    
+    // 2. Hapus file dari Drive
+    if (data?.file_id) {
+      const { googleDriveService } = await import('./googleDriveService');
+      await googleDriveService.deleteFile(data.file_id);
+    }
+
+    // 3. Hapus dari DB
     const { error } = await supabase.from('account_warning_logs').delete().eq('id', id);
     if (error) throw error;
+    return true;
+  },
+
+  async bulkDeleteWarnings(ids: string[]) {
+    for (const id of ids) {
+      await this.deleteWarning(id);
+    }
     return true;
   },
 
@@ -104,6 +121,16 @@ export const disciplineService = {
   },
 
   async deleteTermination(id: string, accountId: string) {
+    // 1. Ambil ID file
+    const { data } = await supabase.from('account_termination_logs').select('file_id').eq('id', id).single();
+    
+    // 2. Hapus file dari Drive
+    if (data?.file_id) {
+      const { googleDriveService } = await import('./googleDriveService');
+      await googleDriveService.deleteFile(data.file_id);
+    }
+
+    // 3. Hapus dari DB
     const { error } = await supabase.from('account_termination_logs').delete().eq('id', id);
     if (error) throw error;
 
@@ -111,6 +138,13 @@ export const disciplineService = {
     await accountService.update(accountId, {
       end_date: null
     });
+    return true;
+  },
+
+  async bulkDeleteTerminations(items: { id: string, account_id: string }[]) {
+    for (const item of items) {
+      await this.deleteTermination(item.id, item.account_id);
+    }
     return true;
   },
 

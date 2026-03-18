@@ -180,6 +180,45 @@ export const accountService = {
   },
 
   async delete(id: string) {
+    // 1. Ambil data akun untuk mendapatkan ID file Drive
+    const { data: account } = await supabase
+      .from('accounts')
+      .select('photo_google_id, ktp_google_id, diploma_google_id')
+      .eq('id', id)
+      .single();
+
+    // 2. Ambil semua log untuk mendapatkan ID file Drive mereka
+    const [careerLogs, healthLogs, contracts, warnings, terminations] = await Promise.all([
+      supabase.from('account_career_logs').select('file_sk_id').eq('account_id', id),
+      supabase.from('account_health_logs').select('file_mcu_id').eq('account_id', id),
+      supabase.from('account_contracts').select('file_id').eq('account_id', id),
+      supabase.from('account_warning_logs').select('file_id').eq('account_id', id),
+      supabase.from('account_termination_logs').select('file_id').eq('account_id', id)
+    ]);
+
+    // 3. Kumpulkan semua file ID unik
+    const fileIds = new Set<string>();
+    if (account?.photo_google_id) fileIds.add(account.photo_google_id);
+    if (account?.ktp_google_id) fileIds.add(account.ktp_google_id);
+    if (account?.diploma_google_id) fileIds.add(account.diploma_google_id);
+    
+    careerLogs.data?.forEach(log => log.file_sk_id && fileIds.add(log.file_sk_id));
+    healthLogs.data?.forEach(log => log.file_mcu_id && fileIds.add(log.file_mcu_id));
+    contracts.data?.forEach(log => log.file_id && fileIds.add(log.file_id));
+    warnings.data?.forEach(log => log.file_id && fileIds.add(log.file_id));
+    terminations.data?.forEach(log => log.file_id && fileIds.add(log.file_id));
+
+    // 4. Hapus file dari Google Drive secara paralel (dengan sedikit delay/batching jika banyak)
+    const { googleDriveService } = await import('./googleDriveService');
+    for (const fileId of fileIds) {
+      try {
+        await googleDriveService.deleteFile(fileId);
+      } catch (e) {
+        console.error(`Gagal menghapus file ${fileId} saat hapus akun:`, e);
+      }
+    }
+
+    // 5. Hapus dari database (Supabase akan handle cascade jika diatur, tapi kita pastikan)
     const { error } = await supabase
       .from('accounts')
       .delete()
@@ -450,6 +489,16 @@ export const accountService = {
   },
 
   async deleteCareerLog(id: string) {
+    // 1. Ambil ID file
+    const { data } = await supabase.from('account_career_logs').select('file_sk_id').eq('id', id).single();
+    
+    // 2. Hapus file dari Drive
+    if (data?.file_sk_id) {
+      const { googleDriveService } = await import('./googleDriveService');
+      await googleDriveService.deleteFile(data.file_sk_id);
+    }
+
+    // 3. Hapus dari DB
     const { error } = await supabase
       .from('account_career_logs')
       .delete()
@@ -508,6 +557,16 @@ export const accountService = {
   },
 
   async deleteHealthLog(id: string) {
+    // 1. Ambil ID file
+    const { data } = await supabase.from('account_health_logs').select('file_mcu_id').eq('id', id).single();
+    
+    // 2. Hapus file dari Drive
+    if (data?.file_mcu_id) {
+      const { googleDriveService } = await import('./googleDriveService');
+      await googleDriveService.deleteFile(data.file_mcu_id);
+    }
+
+    // 3. Hapus dari DB
     const { error } = await supabase
       .from('account_health_logs')
       .delete()

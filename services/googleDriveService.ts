@@ -74,6 +74,33 @@ class GoogleDriveService {
   }
 
   /**
+   * Menghapus file secara permanen dari Google Drive.
+   */
+  async deleteFile(fileId: string): Promise<boolean> {
+    if (!fileId) return true;
+    const id = fileId.includes('|') ? fileId.split('|')[0] : fileId;
+    
+    try {
+      const response = await fetch(`/api/delete-file?fileId=${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('GoogleDriveService Delete Error:', errorData);
+        // Tetap return true jika file tidak ditemukan (404) agar proses hapus di DB tetap lanjut
+        if (response.status === 404) return true;
+        throw new Error(errorData.error || 'Gagal menghapus file dari Google Drive.');
+      }
+
+      return true;
+    } catch (error) {
+      console.error('GoogleDriveService Delete Error:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Mendapatkan URL viewer Google Drive langsung (untuk dibuka di tab baru).
    */
   getViewerUrl(fileId: string): string {

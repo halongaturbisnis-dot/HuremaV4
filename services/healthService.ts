@@ -121,5 +121,16 @@ export const healthService = {
         file_mcu_id: item.file_mcu_link ? item.file_mcu_link.match(/[-\w]{25,}/)?.[0] : null
       });
     }
+  },
+
+  async delete(id: string) {
+    return accountService.deleteHealthLog(id);
+  },
+
+  async bulkDelete(ids: string[]) {
+    for (const id of ids) {
+      await this.delete(id);
+    }
+    return true;
   }
 };

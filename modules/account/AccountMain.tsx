@@ -5,7 +5,7 @@ import {
   ArrowLeft, UserCircle, UserCheck, UserX,
   History, FileBadge, Award, Activity, ShieldAlert,
   Download, Upload, Image as ImageIcon,
-  MapPin, Mail, Phone, Edit2, LogOut, Shield, Briefcase
+  MapPin, Mail, Phone, Edit2, LogOut, Shield, Briefcase, Trash2
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
@@ -47,6 +47,7 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
   const [showForm, setShowForm] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bulkImageInputRef = useRef<HTMLInputElement>(null);
@@ -521,6 +522,7 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
       try {
         await accountService.delete(id);
         setAccounts(prev => prev.filter(acc => acc.id !== id));
+        setSelectedIds(prev => prev.filter(sid => sid !== id));
         setSelectedAccountId(null);
         Swal.fire('Terhapus!', 'Akun telah dihapus.', 'success');
       } catch (error) {
@@ -528,6 +530,52 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
       } finally {
         setIsSaving(false);
       }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+
+    const result = await Swal.fire({
+      title: 'Hapus Masal?',
+      text: `Apakah Anda yakin ingin menghapus ${selectedIds.length} akun terpilih secara permanen?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Ya, Hapus Semua',
+      cancelButtonText: 'Batal'
+    });
+
+    if (result.isConfirmed) {
+      setIsSaving(true);
+      try {
+        for (const id of selectedIds) {
+          await accountService.delete(id);
+        }
+        setAccounts(prev => prev.filter(acc => !selectedIds.includes(acc.id)));
+        setSelectedIds([]);
+        Swal.fire('Berhasil!', 'Data terpilih telah dihapus.', 'success');
+      } catch (error) {
+        Swal.fire('Gagal', 'Beberapa data mungkin gagal dihapus.', 'error');
+        fetchAccounts();
+      } finally {
+        setIsSaving(false);
+      }
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredAccounts.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredAccounts.map(acc => acc.id));
     }
   };
 
@@ -766,6 +814,15 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
             </div>
             
             <div className="flex items-center gap-2">
+              {selectedIds.length > 0 && (
+                <button 
+                  onClick={handleBulkDelete}
+                  className="flex items-center gap-2 bg-red-50 text-red-600 px-3 py-2 rounded-md border border-red-100 hover:bg-red-100 transition-all text-xs font-bold uppercase mr-2"
+                >
+                  <Trash2 size={14} />
+                  Hapus ({selectedIds.length})
+                </button>
+              )}
               <div className="flex items-center gap-1 mr-2">
                 <button 
                   onClick={downloadTemplate}
@@ -866,35 +923,52 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredAccounts.map(account => {
                 const isInactive = account.end_date && account.end_date <= today;
+                const isSelected = selectedIds.includes(account.id);
                 return (
                   <div 
                     key={account.id} 
-                    onClick={() => setSelectedAccountId(account.id)}
-                    className={`group bg-white border border-gray-100 p-4 rounded-md shadow-sm hover:shadow-md transition-all cursor-pointer border-l-4 border-l-transparent ${isInactive ? 'hover:border-l-red-500' : 'hover:border-l-[#006E62]'}`}
+                    className={`group bg-white border p-4 rounded-md shadow-sm hover:shadow-md transition-all cursor-pointer border-l-4 relative ${isSelected ? 'border-[#006E62] bg-emerald-50/10' : 'border-gray-100 border-l-transparent'} ${isInactive && !isSelected ? 'hover:border-l-red-500' : (!isSelected ? 'hover:border-l-[#006E62]' : '')}`}
                   >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden border border-gray-200 shrink-0">
-                        {account.photo_google_id ? (
-                          <img src={googleDriveService.getFileUrl(account.photo_google_id)} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400">
-                            <UserCircle size={24} />
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-bold text-[#006E62] group-hover:text-[#005a50] line-clamp-1 text-sm">{account.full_name}</h3>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase">{account.position} • {account.internal_nik}</p>
-                      </div>
-                      {isInactive && <span className="text-[8px] font-bold px-1 py-0.5 bg-red-50 text-red-600 rounded uppercase">Exit</span>}
+                    <div className="absolute top-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); toggleSelect(account.id); }}
+                        className={`p-1.5 rounded-full border transition-colors ${isSelected ? 'bg-[#006E62] text-white border-[#006E62]' : 'bg-white text-gray-400 border-gray-200 hover:border-[#006E62] hover:text-[#006E62]'}`}
+                      >
+                        <UserCheck size={12} />
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleDelete(account.id); }}
+                        className="p-1.5 rounded-full bg-white text-red-400 border border-gray-200 hover:border-red-500 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </div>
-                    <div className="flex items-center justify-between pt-2 border-t border-gray-50">
-                       <span className="text-[10px] text-gray-500 font-medium">{(account as any).location?.name || 'Tanpa Lokasi'}</span>
-                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
-                         isInactive ? 'bg-gray-100 text-gray-400' : (account.employee_type === 'Tetap' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600')
-                       }`}>
-                         {account.employee_type}
-                       </span>
+
+                    <div onClick={() => setSelectedAccountId(account.id)}>
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden border border-gray-200 shrink-0">
+                          {account.photo_google_id ? (
+                            <img src={googleDriveService.getFileUrl(account.photo_google_id)} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                              <UserCircle size={24} />
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-bold text-[#006E62] group-hover:text-[#005a50] line-clamp-1 text-sm">{account.full_name}</h3>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase">{account.position} • {account.internal_nik}</p>
+                        </div>
+                        {isInactive && <span className="text-[8px] font-bold px-1 py-0.5 bg-red-50 text-red-600 rounded uppercase">Exit</span>}
+                      </div>
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-50">
+                         <span className="text-[10px] text-gray-500 font-medium">{(account as any).location?.name || 'Tanpa Lokasi'}</span>
+                         <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
+                           isInactive ? 'bg-gray-100 text-gray-400' : (account.employee_type === 'Tetap' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600')
+                         }`}>
+                           {account.employee_type}
+                         </span>
+                      </div>
                     </div>
                   </div>
                 );
@@ -905,22 +979,40 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
               <table className="w-full text-left min-w-[700px]">
                 <thead className="bg-gray-50 text-[10px] font-bold text-gray-500 uppercase">
                   <tr>
+                    <th className="px-6 py-3 w-10">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-gray-300 text-[#006E62] focus:ring-[#006E62]"
+                        checked={selectedIds.length === filteredAccounts.length && filteredAccounts.length > 0}
+                        onChange={toggleSelectAll}
+                      />
+                    </th>
                     <th className="px-6 py-3">Nama & Posisi</th>
                     <th className="px-6 py-3">NIK Internal</th>
                     <th className="px-6 py-3">Lokasi Penempatan</th>
                     <th className="px-6 py-3">Status</th>
+                    <th className="px-6 py-3 text-right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {filteredAccounts.map(account => {
                     const isInactive = account.end_date && account.end_date <= today;
+                    const isSelected = selectedIds.includes(account.id);
                     return (
                       <tr 
                         key={account.id} 
-                        onClick={() => setSelectedAccountId(account.id)}
-                        className="hover:bg-gray-50 cursor-pointer transition-colors"
+                        className={`hover:bg-gray-50 transition-colors ${isSelected ? 'bg-emerald-50/20' : ''}`}
                       >
                         <td className="px-6 py-4">
+                          <input 
+                            type="checkbox" 
+                            className="rounded border-gray-300 text-[#006E62] focus:ring-[#006E62]"
+                            checked={isSelected}
+                            onChange={() => toggleSelect(account.id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </td>
+                        <td className="px-6 py-4" onClick={() => setSelectedAccountId(account.id)}>
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
                               {account.photo_google_id && <img src={googleDriveService.getFileUrl(account.photo_google_id)} className="w-full h-full object-cover" />}
@@ -931,12 +1023,21 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-xs font-mono text-gray-500">{account.internal_nik}</td>
-                        <td className="px-6 py-4 text-xs text-gray-500">{(account as any).location?.name || '-'}</td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 text-xs font-mono text-gray-500" onClick={() => setSelectedAccountId(account.id)}>{account.internal_nik}</td>
+                        <td className="px-6 py-4 text-xs text-gray-500" onClick={() => setSelectedAccountId(account.id)}>{(account as any).location?.name || '-'}</td>
+                        <td className="px-6 py-4" onClick={() => setSelectedAccountId(account.id)}>
                           <span className={`text-[9px] font-bold px-1.5 py-0.5 border border-gray-100 rounded uppercase ${isInactive ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-500'}`}>
                             {isInactive ? 'NON-AKTIF' : account.employee_type}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleDelete(account.id); }}
+                            className="p-1.5 text-red-400 hover:text-red-600 transition-colors"
+                            title="Hapus Akun"
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         </td>
                       </tr>
                     );
