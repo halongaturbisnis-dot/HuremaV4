@@ -22,7 +22,7 @@ export const certificationService = {
       .from('account_certifications')
       .select(`
         *,
-        account:accounts(full_name, internal_nik, role, access_code)
+        account:accounts(full_name, internal_nik, role, access_code, photo_google_id)
       `)
       .order('entry_date', { ascending: false });
     

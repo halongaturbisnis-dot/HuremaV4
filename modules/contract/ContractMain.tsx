@@ -265,8 +265,17 @@ const ContractMain: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-emerald-50 text-[#006E62] flex items-center justify-center border border-emerald-100">
-                          <UserCircle size={20} />
+                        <div className="w-8 h-8 rounded-full bg-emerald-50 text-[#006E62] flex items-center justify-center border border-emerald-100 overflow-hidden">
+                          {c.account?.photo_google_id ? (
+                            <img 
+                              src={googleDriveService.getFileUrl(c.account.photo_google_id)} 
+                              alt="" 
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <UserCircle size={20} />
+                          )}
                         </div>
                         <div>
                           <div className="text-xs font-bold text-gray-800">{c.account?.full_name}</div>
@@ -349,8 +358,17 @@ const ContractMain: React.FC = () => {
             </div>
             <div className="p-6 space-y-6">
               <div className="flex items-center gap-4 p-4 bg-emerald-50/30 rounded-lg border border-emerald-100/50">
-                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-emerald-100 text-[#006E62] shadow-sm">
-                  <UserCircle size={32} />
+                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-emerald-100 text-[#006E62] shadow-sm overflow-hidden">
+                  {selectedContract.account?.photo_google_id ? (
+                    <img 
+                      src={googleDriveService.getFileUrl(selectedContract.account.photo_google_id)} 
+                      alt="" 
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <UserCircle size={32} />
+                  )}
                 </div>
                 <div>
                   <h4 className="font-bold text-gray-900">{selectedContract.account?.full_name}</h4>
@@ -425,7 +443,9 @@ const ContractMain: React.FC = () => {
             <form onSubmit={async (e) => {
               e.preventDefault();
               const formData = new FormData(e.currentTarget);
-              const data = {
+              const file = (formData.get('file_kontrak') as File);
+              
+              const data: any = {
                 contract_number: formData.get('contract_number') as string,
                 contract_type: formData.get('contract_type') as string,
                 start_date: formData.get('start_date') as string,
@@ -435,6 +455,15 @@ const ContractMain: React.FC = () => {
               
               try {
                 setIsLoading(true);
+                
+                if (file && file.size > 0) {
+                  if (editingContract.file_id) {
+                    await googleDriveService.deleteFile(editingContract.file_id);
+                  }
+                  const newFileId = await googleDriveService.uploadFile(file);
+                  data.file_id = newFileId;
+                }
+
                 await contractService.update(editingContract.id, data);
                 setContracts(prev => prev.map(c => c.id === editingContract.id ? { ...c, ...data } : c));
                 setEditingContract(null);
@@ -498,6 +527,16 @@ const ContractMain: React.FC = () => {
                   rows={3}
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006E62] text-sm font-medium resize-none"
                 />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ganti Dokumen Kontrak (Opsional)</label>
+                <input 
+                  type="file"
+                  name="file_kontrak"
+                  accept="application/pdf"
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006E62] text-sm font-medium"
+                />
+                {editingContract.file_id && <p className="text-[10px] text-orange-500 font-medium italic">* Mengunggah file baru akan menghapus file lama.</p>}
               </div>
               <div className="pt-4 flex gap-3">
                 <button 

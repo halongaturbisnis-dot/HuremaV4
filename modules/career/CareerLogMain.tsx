@@ -220,8 +220,17 @@ const CareerLogMain: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-emerald-50 text-[#006E62] flex items-center justify-center border border-emerald-100">
-                          <UserCircle size={20} />
+                        <div className="w-8 h-8 rounded-full bg-emerald-50 text-[#006E62] flex items-center justify-center border border-emerald-100 overflow-hidden">
+                          {log.account?.photo_google_id ? (
+                            <img 
+                              src={googleDriveService.getFileUrl(log.account.photo_google_id)} 
+                              alt="" 
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <UserCircle size={20} />
+                          )}
                         </div>
                         <div>
                           <div className="text-xs font-bold text-gray-800">{log.account?.full_name}</div>
@@ -304,8 +313,17 @@ const CareerLogMain: React.FC = () => {
             </div>
             <div className="p-6 space-y-6">
               <div className="flex items-center gap-4 p-4 bg-emerald-50/30 rounded-lg border border-emerald-100/50">
-                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-emerald-100 text-[#006E62] shadow-sm">
-                  <UserCircle size={32} />
+                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-emerald-100 text-[#006E62] shadow-sm overflow-hidden">
+                  {selectedLog.account?.photo_google_id ? (
+                    <img 
+                      src={googleDriveService.getFileUrl(selectedLog.account.photo_google_id)} 
+                      alt="" 
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <UserCircle size={32} />
+                  )}
                 </div>
                 <div>
                   <h4 className="font-bold text-gray-900">{selectedLog.account?.full_name}</h4>
@@ -380,7 +398,9 @@ const CareerLogMain: React.FC = () => {
             <form onSubmit={async (e) => {
               e.preventDefault();
               const formData = new FormData(e.currentTarget);
-              const data = {
+              const file = (formData.get('file_sk') as File);
+              
+              const data: any = {
                 position: formData.get('position') as string,
                 grade: formData.get('grade') as string,
                 change_date: formData.get('change_date') as string,
@@ -389,6 +409,16 @@ const CareerLogMain: React.FC = () => {
               
               try {
                 setIsLoading(true);
+                
+                if (file && file.size > 0) {
+                  // Jika ada file baru, hapus yang lama jika ada
+                  if (editingLog.file_sk_id) {
+                    await googleDriveService.deleteFile(editingLog.file_sk_id);
+                  }
+                  const newFileId = await googleDriveService.uploadFile(file);
+                  data.file_sk_id = newFileId;
+                }
+
                 await accountService.updateCareerLog(editingLog.id, data);
                 setLogs(prev => prev.map(l => l.id === editingLog.id ? { ...l, ...data } : l));
                 setEditingLog(null);
@@ -434,6 +464,16 @@ const CareerLogMain: React.FC = () => {
                   rows={3}
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006E62] text-sm font-medium resize-none"
                 />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ganti Dokumen SK (Opsional)</label>
+                <input 
+                  type="file"
+                  name="file_sk"
+                  accept="image/*,application/pdf"
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006E62] text-sm font-medium"
+                />
+                {editingLog.file_sk_id && <p className="text-[10px] text-orange-500 font-medium italic">* Mengunggah file baru akan menghapus file lama.</p>}
               </div>
               <div className="pt-4 flex gap-3">
                 <button 

@@ -266,7 +266,18 @@ const DisciplineMain: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-100"><UserCircle size={20} /></div>
+                        <div className="w-8 h-8 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-100 overflow-hidden">
+                          {w.account?.photo_google_id ? (
+                            <img 
+                              src={googleDriveService.getFileUrl(w.account.photo_google_id)} 
+                              alt="" 
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <UserCircle size={20} />
+                          )}
+                        </div>
                         <div>
                           <div className="text-xs font-bold text-gray-800">{w.account?.full_name}</div>
                           <div className="text-[10px] text-gray-400 font-mono">{w.account?.internal_nik}</div>
@@ -351,7 +362,18 @@ const DisciplineMain: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center border border-red-100"><LogOut size={16} /></div>
+                        <div className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center border border-red-100 overflow-hidden">
+                          {t.account?.photo_google_id ? (
+                            <img 
+                              src={googleDriveService.getFileUrl(t.account.photo_google_id)} 
+                              alt="" 
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <LogOut size={16} />
+                          )}
+                        </div>
                         <div>
                           <div className="text-xs font-bold text-gray-800">{t.account?.full_name}</div>
                           <div className="text-[10px] text-gray-400 font-mono">{t.account?.internal_nik}</div>
@@ -428,8 +450,17 @@ const DisciplineMain: React.FC = () => {
             </div>
             <div className="p-6 space-y-6">
               <div className="flex items-center gap-4 p-4 bg-orange-50/30 rounded-lg border border-orange-100/50">
-                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-orange-100 text-orange-600 shadow-sm">
-                  <UserCircle size={32} />
+                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-orange-100 text-orange-600 shadow-sm overflow-hidden">
+                  {selectedWarning.account?.photo_google_id ? (
+                    <img 
+                      src={googleDriveService.getFileUrl(selectedWarning.account.photo_google_id)} 
+                      alt="" 
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <UserCircle size={32} />
+                  )}
                 </div>
                 <div>
                   <h4 className="font-bold text-gray-900">{selectedWarning.account?.full_name}</h4>
@@ -504,7 +535,9 @@ const DisciplineMain: React.FC = () => {
             <form onSubmit={async (e) => {
               e.preventDefault();
               const formData = new FormData(e.currentTarget);
-              const data = {
+              const file = (formData.get('file_sp') as File);
+              
+              const data: any = {
                 warning_type: formData.get('warning_type') as string,
                 issue_date: formData.get('issue_date') as string,
                 expiry_date: formData.get('expiry_date') as string,
@@ -513,6 +546,15 @@ const DisciplineMain: React.FC = () => {
               
               try {
                 setIsLoading(true);
+                
+                if (file && file.size > 0) {
+                  if (editingWarning.file_id) {
+                    await googleDriveService.deleteFile(editingWarning.file_id);
+                  }
+                  const newFileId = await googleDriveService.uploadFile(file);
+                  data.file_id = newFileId;
+                }
+
                 await disciplineService.updateWarning(editingWarning.id, data as any);
                 setWarnings(prev => prev.map(w => w.id === editingWarning.id ? { ...w, ...data } : w));
                 setEditingWarning(null);
@@ -568,6 +610,16 @@ const DisciplineMain: React.FC = () => {
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm font-medium resize-none"
                 />
               </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ganti Dokumen SP (Opsional)</label>
+                <input 
+                  type="file"
+                  name="file_sp"
+                  accept="image/*,application/pdf"
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm font-medium"
+                />
+                {editingWarning.file_id && <p className="text-[10px] text-orange-500 font-medium italic">* Mengunggah file baru akan menghapus file lama.</p>}
+              </div>
               <div className="pt-4 flex gap-3">
                 <button 
                   type="button"
@@ -603,8 +655,17 @@ const DisciplineMain: React.FC = () => {
             </div>
             <div className="p-6 space-y-6">
               <div className="flex items-center gap-4 p-4 bg-red-50/30 rounded-lg border border-red-100/50">
-                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-red-100 text-red-600 shadow-sm">
-                  <LogOut size={24} />
+                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-red-100 text-red-600 shadow-sm overflow-hidden">
+                  {selectedTermination.account?.photo_google_id ? (
+                    <img 
+                      src={googleDriveService.getFileUrl(selectedTermination.account.photo_google_id)} 
+                      alt="" 
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <LogOut size={24} />
+                  )}
                 </div>
                 <div>
                   <h4 className="font-bold text-gray-900">{selectedTermination.account?.full_name}</h4>
@@ -679,7 +740,9 @@ const DisciplineMain: React.FC = () => {
             <form onSubmit={async (e) => {
               e.preventDefault();
               const formData = new FormData(e.currentTarget);
-              const data = {
+              const file = (formData.get('file_exit') as File);
+              
+              const data: any = {
                 termination_type: formData.get('termination_type') as string,
                 termination_date: formData.get('termination_date') as string,
                 reason: formData.get('reason') as string,
@@ -689,6 +752,15 @@ const DisciplineMain: React.FC = () => {
               
               try {
                 setIsLoading(true);
+                
+                if (file && file.size > 0) {
+                  if (editingTermination.file_id) {
+                    await googleDriveService.deleteFile(editingTermination.file_id);
+                  }
+                  const newFileId = await googleDriveService.uploadFile(file);
+                  data.file_id = newFileId;
+                }
+
                 await disciplineService.updateTermination(editingTermination.id, data as any);
                 setTerminations(prev => prev.map(t => t.id === editingTermination.id ? { ...t, ...data } : t));
                 setEditingTermination(null);
@@ -752,6 +824,16 @@ const DisciplineMain: React.FC = () => {
                   rows={3}
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-medium resize-none"
                 />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ganti Dokumen Exit (Opsional)</label>
+                <input 
+                  type="file"
+                  name="file_exit"
+                  accept="image/*,application/pdf"
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-medium"
+                />
+                {editingTermination.file_id && <p className="text-[10px] text-orange-500 font-medium italic">* Mengunggah file baru akan menghapus file lama.</p>}
               </div>
               <div className="pt-4 flex gap-3">
                 <button 

@@ -22,7 +22,7 @@ export const contractService = {
       .from('account_contracts')
       .select(`
         *,
-        account:accounts(full_name, internal_nik, role, access_code)
+        account:accounts(full_name, internal_nik, role, access_code, photo_google_id)
       `)
       .order('created_at', { ascending: false });
     

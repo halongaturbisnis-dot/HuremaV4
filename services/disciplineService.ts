@@ -21,7 +21,7 @@ export const disciplineService = {
   async getWarningsAll() {
     const { data, error } = await supabase
       .from('account_warning_logs')
-      .select('*, account:accounts(full_name, internal_nik, role, access_code)')
+      .select('*, account:accounts(full_name, internal_nik, role, access_code, photo_google_id)')
       .order('issue_date', { ascending: false });
     if (error) throw error;
     // Filter out logs where account access_code contains SPADMIN (case-insensitive)
@@ -105,7 +105,7 @@ export const disciplineService = {
   async getTerminationsAll() {
     const { data, error } = await supabase
       .from('account_termination_logs')
-      .select('*, account:accounts(full_name, internal_nik, role, access_code)')
+      .select('*, account:accounts(full_name, internal_nik, role, access_code, photo_google_id)')
       .order('termination_date', { ascending: false });
     if (error) throw error;
     // Filter out logs where account access_code contains SPADMIN (case-insensitive)

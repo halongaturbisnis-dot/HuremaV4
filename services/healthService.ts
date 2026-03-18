@@ -11,7 +11,7 @@ export const healthService = {
       .from('account_health_logs')
       .select(`
         *,
-        account:accounts(full_name, internal_nik, role, access_code)
+        account:accounts(full_name, internal_nik, role, access_code, photo_google_id)
       `)
       .order('change_date', { ascending: false });
     

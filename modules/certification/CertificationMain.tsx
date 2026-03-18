@@ -237,8 +237,17 @@ const CertificationMain: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-emerald-50 text-[#006E62] flex items-center justify-center border border-emerald-100">
-                          <UserCircle size={20} />
+                        <div className="w-8 h-8 rounded-full bg-emerald-50 text-[#006E62] flex items-center justify-center border border-emerald-100 overflow-hidden">
+                          {c.account?.photo_google_id ? (
+                            <img 
+                              src={googleDriveService.getFileUrl(c.account.photo_google_id)} 
+                              alt="" 
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <UserCircle size={20} />
+                          )}
                         </div>
                         <div>
                           <div className="text-xs font-bold text-gray-800">{c.account?.full_name}</div>
@@ -319,8 +328,17 @@ const CertificationMain: React.FC = () => {
             </div>
             <div className="p-6 space-y-6">
               <div className="flex items-center gap-4 p-4 bg-emerald-50/30 rounded-lg border border-emerald-100/50">
-                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-emerald-100 text-[#006E62] shadow-sm">
-                  <UserCircle size={32} />
+                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-emerald-100 text-[#006E62] shadow-sm overflow-hidden">
+                  {selectedCert.account?.photo_google_id ? (
+                    <img 
+                      src={googleDriveService.getFileUrl(selectedCert.account.photo_google_id)} 
+                      alt="" 
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <UserCircle size={32} />
+                  )}
                 </div>
                 <div>
                   <h4 className="font-bold text-gray-900">{selectedCert.account?.full_name}</h4>
@@ -395,7 +413,9 @@ const CertificationMain: React.FC = () => {
             <form onSubmit={async (e) => {
               e.preventDefault();
               const formData = new FormData(e.currentTarget);
-              const data = {
+              const file = (formData.get('file_sertifikat') as File);
+              
+              const data: any = {
                 cert_name: formData.get('cert_name') as string,
                 cert_type: formData.get('cert_type') as string,
                 cert_date: formData.get('cert_date') as string,
@@ -404,6 +424,15 @@ const CertificationMain: React.FC = () => {
               
               try {
                 setIsLoading(true);
+                
+                if (file && file.size > 0) {
+                  if (editingCert.file_id) {
+                    await googleDriveService.deleteFile(editingCert.file_id);
+                  }
+                  const newFileId = await googleDriveService.uploadFile(file);
+                  data.file_id = newFileId;
+                }
+
                 await certificationService.update(editingCert.id, data);
                 setCerts(prev => prev.map(c => c.id === editingCert.id ? { ...c, ...data } : c));
                 setEditingCert(null);
@@ -455,6 +484,16 @@ const CertificationMain: React.FC = () => {
                   rows={3}
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006E62] text-sm font-medium resize-none"
                 />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ganti Dokumen Sertifikat (Opsional)</label>
+                <input 
+                  type="file"
+                  name="file_sertifikat"
+                  accept="image/*,application/pdf"
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006E62] text-sm font-medium"
+                />
+                {editingCert.file_id && <p className="text-[10px] text-orange-500 font-medium italic">* Mengunggah file baru akan menghapus file lama.</p>}
               </div>
               <div className="pt-4 flex gap-3">
                 <button 
