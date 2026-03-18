@@ -278,7 +278,7 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
       <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter mb-0.5">{label}</p>
       {isFile && value ? (
         <button 
-          onClick={() => setPreviewMedia({ url: googleDriveService.getFileUrl(value).replace('=s1600', '=s0'), title: label, type: 'image' })}
+          onClick={() => window.open(googleDriveService.getViewerUrl(value), '_blank')}
           className="flex items-center gap-1.5 text-[11px] text-[#006E62] font-bold hover:underline"
         >
           <Paperclip size={10} /> LIHAT DOKUMEN
@@ -307,7 +307,7 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
       <div className="bg-white rounded-md border border-gray-100 p-6 flex flex-col md:flex-row gap-6 items-start shadow-sm">
         <div 
           className="w-32 h-32 rounded-md border-4 border-gray-50 overflow-hidden shrink-0 shadow-inner cursor-pointer hover:opacity-90 transition-opacity"
-          onClick={() => account.photo_google_id && setPreviewMedia({ url: googleDriveService.getFileUrl(account.photo_google_id), title: 'Foto Profil', type: 'image' })}
+          onClick={() => account.photo_google_id && window.open(googleDriveService.getViewerUrl(account.photo_google_id), '_blank')}
         >
           {account.photo_google_id ? (
             <img src={googleDriveService.getFileUrl(account.photo_google_id)} className="w-full h-full object-cover" />

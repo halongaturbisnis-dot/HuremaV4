@@ -72,6 +72,15 @@ class GoogleDriveService {
     // Untuk non-image, buka via Google Drive viewer
     return `https://drive.google.com/file/d/${id}/view`;
   }
+
+  /**
+   * Mendapatkan URL viewer Google Drive langsung (untuk dibuka di tab baru).
+   */
+  getViewerUrl(fileId: string): string {
+    if (!fileId) return '';
+    const id = fileId.includes('|') ? fileId.split('|')[0] : fileId;
+    return `https://drive.google.com/file/d/${id}/view`;
+  }
 }
 
 export const googleDriveService = new GoogleDriveService();
