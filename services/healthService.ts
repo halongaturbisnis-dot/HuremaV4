@@ -123,6 +123,10 @@ export const healthService = {
     }
   },
 
+  async update(id: string, input: any) {
+    return accountService.updateHealthLog(id, input);
+  },
+
   async delete(id: string) {
     return accountService.deleteHealthLog(id);
   },

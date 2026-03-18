@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Activity, Search, Download, FileUp, Paperclip, UserCircle, Upload, Trash2 } from 'lucide-react';
+import { Activity, Search, Download, FileUp, Paperclip, UserCircle, Upload, Trash2, Edit2, X, Info } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { healthService } from '../../services/healthService';
 import { googleDriveService } from '../../services/googleDriveService';
@@ -16,6 +16,8 @@ const HealthLogMain: React.FC = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedLog, setSelectedLog] = useState<HealthLogExtended | null>(null);
+  const [editingLog, setEditingLog] = useState<HealthLogExtended | null>(null);
 
   useEffect(() => {
     fetchLogs();
@@ -204,8 +206,12 @@ const HealthLogMain: React.FC = () => {
               filteredLogs.map(log => {
                 const isSelected = selectedIds.includes(log.id);
                 return (
-                  <tr key={log.id} className={`hover:bg-gray-50/50 transition-colors ${isSelected ? 'bg-emerald-50/20' : ''}`}>
-                    <td className="px-6 py-4">
+                  <tr 
+                    key={log.id} 
+                    className={`hover:bg-gray-50/50 transition-colors cursor-pointer ${isSelected ? 'bg-emerald-50/20' : ''}`}
+                    onClick={() => setSelectedLog(log)}
+                  >
+                    <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                       <input 
                         type="checkbox" 
                         className="rounded border-gray-300 text-[#006E62] focus:ring-[#006E62]"
@@ -255,14 +261,23 @@ const HealthLogMain: React.FC = () => {
                         </label>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <button 
-                        onClick={() => handleDelete(log.id)}
-                        className="p-1.5 text-red-400 hover:text-red-600 transition-colors"
-                        title="Hapus Log"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                    <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-2">
+                        <button 
+                          onClick={() => setEditingLog(log)}
+                          className="p-1.5 text-[#006E62] hover:bg-emerald-50 rounded transition-colors"
+                          title="Edit Log Kesehatan"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(log.id)}
+                          className="p-1.5 text-red-400 hover:bg-red-50 rounded transition-colors"
+                          title="Hapus Log"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -277,6 +292,178 @@ const HealthLogMain: React.FC = () => {
           onClose={() => setShowImportModal(false)} 
           onSuccess={() => { setShowImportModal(false); fetchLogs(); }} 
         />
+      )}
+
+      {/* Detail Modal */}
+      {selectedLog && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <div className="flex items-center gap-2 text-[#006E62]">
+                <Info size={20} />
+                <h3 className="font-bold text-gray-800">Detail Log Kesehatan</h3>
+              </div>
+              <button onClick={() => setSelectedLog(null)} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+            <div className="p-6 space-y-6">
+              <div className="flex items-center gap-4 p-4 bg-emerald-50/30 rounded-lg border border-emerald-100/50">
+                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-emerald-100 text-[#006E62] shadow-sm">
+                  <UserCircle size={32} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900">{selectedLog.account?.full_name}</h4>
+                  <p className="text-xs font-mono text-gray-500 uppercase tracking-wider">{selectedLog.account?.internal_nik}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status MCU</p>
+                  <p className="text-sm font-bold text-[#006E62]">{selectedLog.mcu_status}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Risiko Kesehatan</p>
+                  <p className="text-sm font-bold text-gray-800">{selectedLog.health_risk}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tanggal Periksa</p>
+                  <p className="text-sm font-medium text-gray-700">{formatDate(selectedLog.change_date)}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tanggal Input</p>
+                  <p className="text-sm font-bold text-gray-700">{formatDate(selectedLog.entry_date)}</p>
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-4 border-t border-gray-100">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Catatan / Keterangan</p>
+                <p className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-3 rounded-lg border border-gray-100 italic">
+                  {selectedLog.notes || 'Tidak ada catatan.'}
+                </p>
+              </div>
+
+              {selectedLog.file_mcu_id && (
+                <div className="pt-4">
+                  <a 
+                    href={googleDriveService.getFileUrl(selectedLog.file_mcu_id, true)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-3 bg-emerald-50 text-[#006E62] rounded-lg font-bold text-sm hover:bg-emerald-100 transition-all border border-emerald-200"
+                  >
+                    <Paperclip size={18} /> LIHAT DOKUMEN HASIL
+                  </a>
+                </div>
+              )}
+            </div>
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+              <button 
+                onClick={() => setSelectedLog(null)}
+                className="px-6 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg text-sm font-bold hover:bg-gray-100 transition-all"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingLog && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <div className="flex items-center gap-2 text-[#006E62]">
+                <Edit2 size={20} />
+                <h3 className="font-bold text-gray-800">Edit Log Kesehatan</h3>
+              </div>
+              <button onClick={() => setEditingLog(null)} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const data = {
+                mcu_status: formData.get('mcu_status') as string,
+                health_risk: formData.get('health_risk') as string,
+                change_date: formData.get('change_date') as string,
+                notes: formData.get('notes') as string,
+              };
+              
+              try {
+                setIsLoading(true);
+                await healthService.update(editingLog.id, data);
+                setLogs(prev => prev.map(l => l.id === editingLog.id ? { ...l, ...data } : l));
+                setEditingLog(null);
+                Swal.fire({ title: 'Berhasil!', text: 'Data kesehatan telah diperbarui.', icon: 'success', timer: 1500, showConfirmButton: false });
+              } catch (error) {
+                Swal.fire('Gagal', 'Gagal memperbarui data kesehatan', 'error');
+              } finally {
+                setIsLoading(false);
+              }
+            }} className="p-6 space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status MCU</label>
+                <input 
+                  name="mcu_status"
+                  defaultValue={editingLog.mcu_status}
+                  required
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006E62] text-sm font-medium"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Risiko Kesehatan</label>
+                <select 
+                  name="health_risk"
+                  defaultValue={editingLog.health_risk}
+                  required
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006E62] text-sm font-medium"
+                >
+                  <option value="Normal">Normal</option>
+                  <option value="Rendah">Rendah</option>
+                  <option value="Sedang">Sedang</option>
+                  <option value="Tinggi">Tinggi</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tanggal Periksa</label>
+                <input 
+                  type="date"
+                  name="change_date"
+                  defaultValue={editingLog.change_date}
+                  required
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006E62] text-sm font-medium"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Catatan</label>
+                <textarea 
+                  name="notes"
+                  defaultValue={editingLog.notes || ''}
+                  rows={3}
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006E62] text-sm font-medium resize-none"
+                />
+              </div>
+              <div className="pt-4 flex gap-3">
+                <button 
+                  type="button"
+                  onClick={() => setEditingLog(null)}
+                  className="flex-1 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-sm font-bold hover:bg-gray-100 transition-all"
+                >
+                  Batal
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-1 py-2.5 bg-[#006E62] text-white rounded-lg text-sm font-bold hover:bg-[#005a50] transition-all shadow-md shadow-emerald-100"
+                >
+                  Simpan Perubahan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

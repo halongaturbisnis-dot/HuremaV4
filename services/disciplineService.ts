@@ -48,6 +48,36 @@ export const disciplineService = {
     return data[0] as WarningLog;
   },
 
+  async updateWarning(id: string, input: Partial<WarningLogInput>) {
+    const sanitized = sanitizePayload(input);
+    const { data, error } = await supabase
+      .from('account_warning_logs')
+      .update(sanitized)
+      .eq('id', id)
+      .select();
+    if (error) throw error;
+    return data[0] as WarningLog;
+  },
+
+  async updateTermination(id: string, input: Partial<TerminationLogInput>) {
+    const sanitized = sanitizePayload(input);
+    const { data, error } = await supabase
+      .from('account_termination_logs')
+      .update(sanitized)
+      .eq('id', id)
+      .select();
+    if (error) throw error;
+
+    // Update end_date di profile akun jika termination_date berubah
+    if (input.account_id && input.termination_date) {
+      await accountService.update(input.account_id, {
+        end_date: input.termination_date
+      });
+    }
+
+    return data[0] as TerminationLog;
+  },
+
   async deleteWarning(id: string) {
     // 1. Ambil ID file
     const { data } = await supabase.from('account_warning_logs').select('file_id').eq('id', id).single();
