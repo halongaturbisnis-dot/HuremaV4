@@ -7,12 +7,10 @@ import { Account, AccountInput, CareerLog, CareerLogInput, HealthLog, HealthLogI
  * Mengubah string kosong ('') menjadi null agar tidak error saat masuk ke kolom UUID atau DATE.
  */
 const sanitizePayload = (payload: any) => {
-  const sanitized = { ...payload };
-  Object.keys(sanitized).forEach(key => {
-    // Memastikan string kosong dikirim sebagai null ke database
-    if (sanitized[key] === '' || sanitized[key] === undefined) {
-      sanitized[key] = null;
-    }
+  const sanitized: any = {};
+  Object.keys(payload).forEach(key => {
+    if (payload[key] === undefined) return;
+    sanitized[key] = payload[key] === '' ? null : payload[key];
   });
   return sanitized;
 };

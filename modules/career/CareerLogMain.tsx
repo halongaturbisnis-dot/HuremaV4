@@ -6,6 +6,7 @@ import { googleDriveService } from '../../services/googleDriveService';
 import { accountService } from '../../services/accountService';
 import { CareerLogExtended } from '../../types';
 import CareerImportModal from './CareerImportModal';
+import LogForm from '../account/LogForm';
 import LoadingSpinner from '../../components/Common/LoadingSpinner';
 
 const CareerLogMain: React.FC = () => {
@@ -133,6 +134,22 @@ const CareerLogMain: React.FC = () => {
       setSelectedIds([]);
     } else {
       setSelectedIds(filteredLogs.map(l => l.id));
+    }
+  };
+
+  const handleLogSubmit = async (data: any) => {
+    try {
+      setIsLoading(true);
+      if (editingLog) {
+        await accountService.updateCareerLog(editingLog.id, data);
+        setLogs(prev => prev.map(l => l.id === editingLog.id ? { ...l, ...data } : l));
+        setEditingLog(null);
+        Swal.fire({ title: 'Berhasil!', text: 'Log karir telah diperbarui.', icon: 'success', timer: 1500, showConfirmButton: false });
+      }
+    } catch (error) {
+      Swal.fire('Gagal', 'Gagal memperbarui log', 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -382,117 +399,16 @@ const CareerLogMain: React.FC = () => {
         </div>
       )}
 
-      {/* Edit Modal Placeholder - Will be replaced with actual Form component */}
+      {/* Edit Modal - Using Standard LogForm */}
       {editingLog && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-              <div className="flex items-center gap-2 text-[#006E62]">
-                <Edit2 size={20} />
-                <h3 className="font-bold text-gray-800">Edit Log Karir</h3>
-              </div>
-              <button onClick={() => setEditingLog(null)} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
-                <X size={20} className="text-gray-500" />
-              </button>
-            </div>
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              const file = (formData.get('file_sk') as File);
-              
-              const data: any = {
-                position: formData.get('position') as string,
-                grade: formData.get('grade') as string,
-                change_date: formData.get('change_date') as string,
-                notes: formData.get('notes') as string,
-              };
-              
-              try {
-                setIsLoading(true);
-                
-                if (file && file.size > 0) {
-                  // Jika ada file baru, hapus yang lama jika ada
-                  if (editingLog.file_sk_id) {
-                    await googleDriveService.deleteFile(editingLog.file_sk_id);
-                  }
-                  const newFileId = await googleDriveService.uploadFile(file);
-                  data.file_sk_id = newFileId;
-                }
-
-                await accountService.updateCareerLog(editingLog.id, data);
-                setLogs(prev => prev.map(l => l.id === editingLog.id ? { ...l, ...data } : l));
-                setEditingLog(null);
-                Swal.fire({ title: 'Berhasil!', text: 'Log karir telah diperbarui.', icon: 'success', timer: 1500, showConfirmButton: false });
-              } catch (error) {
-                Swal.fire('Gagal', 'Gagal memperbarui log', 'error');
-              } finally {
-                setIsLoading(false);
-              }
-            }} className="p-6 space-y-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Jabatan</label>
-                <input 
-                  name="position"
-                  defaultValue={editingLog.position}
-                  required
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006E62] text-sm font-medium"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Grade</label>
-                <input 
-                  name="grade"
-                  defaultValue={editingLog.grade || ''}
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006E62] text-sm font-medium"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tanggal Efektif</label>
-                <input 
-                  type="date"
-                  name="change_date"
-                  defaultValue={editingLog.change_date}
-                  required
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006E62] text-sm font-medium"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Catatan</label>
-                <textarea 
-                  name="notes"
-                  defaultValue={editingLog.notes || ''}
-                  rows={3}
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006E62] text-sm font-medium resize-none"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ganti Dokumen SK (Opsional)</label>
-                <input 
-                  type="file"
-                  name="file_sk"
-                  accept="image/*,application/pdf"
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006E62] text-sm font-medium"
-                />
-                {editingLog.file_sk_id && <p className="text-[10px] text-orange-500 font-medium italic">* Mengunggah file baru akan menghapus file lama.</p>}
-              </div>
-              <div className="pt-4 flex gap-3">
-                <button 
-                  type="button"
-                  onClick={() => setEditingLog(null)}
-                  className="flex-1 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-sm font-bold hover:bg-gray-100 transition-all"
-                >
-                  Batal
-                </button>
-                <button 
-                  type="submit"
-                  className="flex-1 py-2.5 bg-[#006E62] text-white rounded-lg text-sm font-bold hover:bg-[#005a50] transition-all shadow-md shadow-emerald-100"
-                >
-                  Simpan Perubahan
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <LogForm 
+          type="career"
+          accountId={editingLog.account_id}
+          initialData={editingLog}
+          isEdit={true}
+          onClose={() => setEditingLog(null)}
+          onSubmit={handleLogSubmit}
+        />
       )}
     </div>
   );

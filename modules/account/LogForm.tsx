@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Save, Upload, FileText, Paperclip, ChevronDown, Calendar, CalendarClock } from 'lucide-react';
+import { X, Save, Upload, FileText, Paperclip, ChevronDown, Calendar, CalendarClock, ExternalLink } from 'lucide-react';
 import { locationService } from '../../services/locationService';
 import { googleDriveService } from '../../services/googleDriveService';
 import { accountService } from '../../services/accountService';
@@ -24,7 +24,7 @@ const LogForm: React.FC<LogFormProps> = ({ type, accountId, initialData, isEdit 
     grade: initialData?.grade || '',
     location_id: initialData?.location_id || '',
     location_name: initialData?.location_name || (initialData?.location?.name || ''),
-    schedule_id: (initialData as any)?.schedule_id || '',
+    schedule_id: initialData?.schedule_id || '',
     file_sk_id: initialData?.file_sk_id || '',
     // Health Fields
     mcu_status: initialData?.mcu_status || '',
@@ -68,12 +68,6 @@ const LogForm: React.FC<LogFormProps> = ({ type, accountId, initialData, isEdit 
        scheduleService.getByLocation(formData.location_id).then(data => {
          const filtered = data.filter(s => s.type === 1 || s.type === 2);
          setSchedules(filtered);
-
-         // FIX: Hanya pasang schedule_id dari initialData jika saat ini masih kosong
-         // Ini mencegah sistem menimpa pilihan manual yang baru saja Anda buat
-         if (!formData.schedule_id && initialData?.schedule_id && filtered.some(s => s.id === initialData.schedule_id)) {
-            setFormData(prev => ({ ...prev, schedule_id: initialData.schedule_id }));
-         }
        });
     } else {
        setSchedules([]);
@@ -342,6 +336,17 @@ const LogForm: React.FC<LogFormProps> = ({ type, accountId, initialData, isEdit 
                       </p>
                       <p className="text-[8px] text-gray-400 truncate">{formData.file_sk_id || 'ID akan tersimpan di G-Drive'}</p>
                     </div>
+                    {formData.file_sk_id && (
+                      <a 
+                        href={googleDriveService.getFileUrl(formData.file_sk_id).replace('=s1600', '=s0')} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="p-1.5 bg-white border border-gray-100 rounded text-[#006E62] hover:bg-emerald-50 transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <ExternalLink size={12} />
+                      </a>
+                    )}
                     <input id="file_sk_id" type="file" className="hidden" onChange={handleFileUpload} disabled={uploading} />
                   </label>
                 </div>
@@ -384,6 +389,17 @@ const LogForm: React.FC<LogFormProps> = ({ type, accountId, initialData, isEdit 
                       </p>
                       <p className="text-[8px] text-gray-400 truncate">{formData.file_mcu_id || 'ID akan tersimpan di G-Drive'}</p>
                     </div>
+                    {formData.file_mcu_id && (
+                      <a 
+                        href={googleDriveService.getFileUrl(formData.file_mcu_id).replace('=s1600', '=s0')} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="p-1.5 bg-white border border-gray-100 rounded text-red-500 hover:bg-red-50 transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <ExternalLink size={12} />
+                      </a>
+                    )}
                     <input id="file_mcu_id" type="file" className="hidden" onChange={handleFileUpload} disabled={uploading} />
                   </label>
                 </div>
