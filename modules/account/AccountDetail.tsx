@@ -16,6 +16,7 @@ import CertificationFormModal from '../certification/CertificationFormModal';
 import ContractFormModal from '../contract/ContractFormModal';
 import WarningForm from '../discipline/WarningForm';
 import TerminationForm from '../discipline/TerminationForm';
+import ContractDetailModal from '../contract/ContractDetailModal';
 
 interface AccountDetailProps {
   id: string;
@@ -41,6 +42,7 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
   const [showContractForm, setShowContractForm] = useState<{ show: boolean, data?: any }>({ show: false });
   const [showWarningForm, setShowWarningForm] = useState(false);
   const [showTerminationForm, setShowTerminationForm] = useState(false);
+  const [selectedContractDetail, setSelectedContractDetail] = useState<AccountContract | null>(null);
   
   // Media Preview States
   const [previewMedia, setPreviewMedia] = useState<{ url: string, title: string, type: 'image' | 'qr' } | null>(null);
@@ -341,8 +343,8 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
         <div className="flex gap-2">
            {!isReadOnly && (
              <>
-               <button onClick={() => onEdit(account)} className="p-2 border border-gray-100 rounded text-gray-400 hover:text-[#006E62] transition-colors"><Edit2 size={16} /></button>
-               <button onClick={() => onDelete(account.id)} className="p-2 border border-gray-100 rounded text-gray-400 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
+               <button onClick={() => onEdit(account)} className="p-2 border border-gray-100 rounded text-[#006E62] bg-emerald-50/50 hover:bg-emerald-50 transition-colors"><Edit2 size={16} /></button>
+               <button onClick={() => onDelete(account.id)} className="p-2 border border-gray-100 rounded text-red-500 bg-red-50/50 hover:bg-red-50 transition-colors"><Trash2 size={16} /></button>
              </>
            )}
         </div>
@@ -437,22 +439,44 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
               <p className="text-[10px] text-gray-400 italic">Belum ada riwayat kontrak.</p>
             ) : (
               contracts.map(c => (
-                <div key={c.id} className="flex group justify-between items-start border-l-2 border-emerald-100 pl-3 py-1 relative">
+                <div 
+                  key={c.id} 
+                  className="flex group justify-between items-start border-l-2 border-emerald-100 pl-3 py-1 relative cursor-pointer hover:bg-gray-50/50 transition-colors"
+                  onClick={() => setSelectedContractDetail(c)}
+                >
                   <div className="flex-1 min-w-0 pr-4">
                     <p className="text-[10px] font-bold text-[#006E62] leading-tight">{c.contract_number}</p>
                     <p className="text-[9px] text-gray-500 font-medium uppercase tracking-tighter">{c.contract_type}</p>
                     <div className="flex justify-between items-center mt-1">
                       <p className="text-[8px] text-gray-400 uppercase font-bold">{formatDate(c.start_date)} - {c.end_date ? formatDate(c.end_date) : 'TETAP'}</p>
                       {c.file_id && (
-                        <button onClick={() => setPreviewMedia({ url: googleDriveService.getFileUrl(c.file_id!).replace('=s1600', '=s0'), title: `Kontrak ${c.contract_number}`, type: 'image' })} className="text-[#006E62] hover:text-[#005a50] flex items-center gap-0.5 text-[8px] font-bold"><Paperclip size={10} /> DOK</button>
+                        <button 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            setPreviewMedia({ url: googleDriveService.getFileUrl(c.file_id!).replace('=s1600', '=s0'), title: `Kontrak ${c.contract_number}`, type: 'image' }); 
+                          }} 
+                          className="text-[#006E62] hover:text-[#005a50] flex items-center gap-0.5 text-[8px] font-bold"
+                        >
+                          <Paperclip size={10} /> DOK
+                        </button>
                       )}
                     </div>
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     {!isReadOnly && (
                       <>
-                        <button onClick={() => setShowContractForm({ show: true, data: c })} className="text-gray-300 hover:text-[#006E62]"><Edit2 size={12} /></button>
-                        <button onClick={() => handleDeleteContract(c.id)} className="text-gray-300 hover:text-red-500"><Trash2 size={12} /></button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setShowContractForm({ show: true, data: c }); }} 
+                          className="text-[#006E62] hover:opacity-80"
+                        >
+                          <Edit2 size={12} />
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleDeleteContract(c.id); }} 
+                          className="text-red-500 hover:opacity-80"
+                        >
+                          <Trash2 size={12} />
+                        </button>
                       </>
                     )}
                   </div>
@@ -693,6 +717,10 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
       
       {showTerminationForm && (
         <TerminationForm accountId={id} onClose={() => setShowTerminationForm(false)} onSuccess={() => { setShowTerminationForm(false); fetchData(); }} />
+      )}
+
+      {selectedContractDetail && (
+        <ContractDetailModal contract={selectedContractDetail} onClose={() => setSelectedContractDetail(null)} />
       )}
     </div>
   );
