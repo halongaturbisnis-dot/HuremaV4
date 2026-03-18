@@ -4,7 +4,7 @@ import {
   Users, UserCheck, UserX, Clock, Calendar, 
   Heart, Briefcase, Search, ArrowLeft, Eye,
   Coffee, Moon, Sun, AlertCircle, CheckCircle2,
-  Baby
+  Baby, UserCircle
 } from 'lucide-react';
 import { monitoringService } from '../../services/monitoringService';
 import { googleDriveService } from '../../services/googleDriveService';
@@ -107,11 +107,11 @@ const DailyMonitoring: React.FC = () => {
                 <tr key={item.id} className="hover:bg-gray-50/50 transition-colors group">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 overflow-hidden shrink-0">
+                      <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 overflow-hidden shrink-0 border border-gray-200">
                         {item.photo_google_id ? (
                           <img src={googleDriveService.getFileUrl(item.photo_google_id)} alt="" className="w-full h-full object-cover" />
                         ) : (
-                          <Users size={16} />
+                          <UserCircle size={16} />
                         )}
                       </div>
                       <div className="min-w-0">

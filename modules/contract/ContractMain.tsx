@@ -265,7 +265,7 @@ const ContractMain: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-emerald-50 text-[#006E62] flex items-center justify-center border border-emerald-100 overflow-hidden">
+                        <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center border border-gray-200 overflow-hidden">
                           {c.account?.photo_google_id ? (
                             <img 
                               src={googleDriveService.getFileUrl(c.account.photo_google_id)} 
@@ -358,7 +358,7 @@ const ContractMain: React.FC = () => {
             </div>
             <div className="p-6 space-y-6">
               <div className="flex items-center gap-4 p-4 bg-emerald-50/30 rounded-lg border border-emerald-100/50">
-                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-emerald-100 text-[#006E62] shadow-sm overflow-hidden">
+                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 text-gray-400 shadow-sm overflow-hidden">
                   {selectedContract.account?.photo_google_id ? (
                     <img 
                       src={googleDriveService.getFileUrl(selectedContract.account.photo_google_id)} 

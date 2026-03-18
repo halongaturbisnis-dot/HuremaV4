@@ -654,7 +654,7 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
             {selfAccount.photo_google_id ? (
               <img src={googleDriveService.getFileUrl(selfAccount.photo_google_id)} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-300"><Users size={48} /></div>
+              <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400"><UserCircle size={48} /></div>
             )}
           </div>
           
@@ -946,13 +946,11 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
 
                     <div onClick={() => setSelectedAccountId(account.id)}>
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden border border-gray-200 shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden border border-gray-200 shrink-0 flex items-center justify-center">
                           {account.photo_google_id ? (
                             <img src={googleDriveService.getFileUrl(account.photo_google_id)} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400">
-                              <UserCircle size={24} />
-                            </div>
+                            <UserCircle size={24} className="text-gray-400" />
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
@@ -1014,9 +1012,13 @@ const AccountMain: React.FC<AccountMainProps> = ({ user, setUser, isSelfProfile 
                         </td>
                         <td className="px-6 py-4" onClick={() => setSelectedAccountId(account.id)}>
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
-                              {account.photo_google_id && <img src={googleDriveService.getFileUrl(account.photo_google_id)} className="w-full h-full object-cover" />}
-                            </div>
+                          <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden shrink-0 border border-gray-200 flex items-center justify-center">
+                            {account.photo_google_id ? (
+                              <img src={googleDriveService.getFileUrl(account.photo_google_id)} className="w-full h-full object-cover" />
+                            ) : (
+                              <UserCircle size={20} className="text-gray-400" />
+                            )}
+                          </div>
                             <div>
                               <div className="font-bold text-[#006E62] text-xs">{account.full_name}</div>
                               <div className="text-[9px] text-gray-400 uppercase font-bold">{account.position}</div>

@@ -266,7 +266,7 @@ const DisciplineMain: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-100 overflow-hidden">
+                        <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center border border-gray-200 overflow-hidden">
                           {w.account?.photo_google_id ? (
                             <img 
                               src={googleDriveService.getFileUrl(w.account.photo_google_id)} 
@@ -362,7 +362,7 @@ const DisciplineMain: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center border border-red-100 overflow-hidden">
+                        <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center border border-gray-200 overflow-hidden">
                           {t.account?.photo_google_id ? (
                             <img 
                               src={googleDriveService.getFileUrl(t.account.photo_google_id)} 
@@ -371,7 +371,7 @@ const DisciplineMain: React.FC = () => {
                               referrerPolicy="no-referrer"
                             />
                           ) : (
-                            <LogOut size={16} />
+                            <UserCircle size={20} />
                           )}
                         </div>
                         <div>
@@ -450,7 +450,7 @@ const DisciplineMain: React.FC = () => {
             </div>
             <div className="p-6 space-y-6">
               <div className="flex items-center gap-4 p-4 bg-orange-50/30 rounded-lg border border-orange-100/50">
-                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-orange-100 text-orange-600 shadow-sm overflow-hidden">
+                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 text-gray-400 shadow-sm overflow-hidden">
                   {selectedWarning.account?.photo_google_id ? (
                     <img 
                       src={googleDriveService.getFileUrl(selectedWarning.account.photo_google_id)} 
@@ -655,7 +655,7 @@ const DisciplineMain: React.FC = () => {
             </div>
             <div className="p-6 space-y-6">
               <div className="flex items-center gap-4 p-4 bg-red-50/30 rounded-lg border border-red-100/50">
-                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-red-100 text-red-600 shadow-sm overflow-hidden">
+                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 text-gray-400 shadow-sm overflow-hidden">
                   {selectedTermination.account?.photo_google_id ? (
                     <img 
                       src={googleDriveService.getFileUrl(selectedTermination.account.photo_google_id)} 
@@ -664,7 +664,7 @@ const DisciplineMain: React.FC = () => {
                       referrerPolicy="no-referrer"
                     />
                   ) : (
-                    <LogOut size={24} />
+                    <UserCircle size={32} />
                   )}
                 </div>
                 <div>

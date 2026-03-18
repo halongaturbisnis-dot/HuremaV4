@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Trophy, Star, Calendar, Users, Plus, Trash2, Award, Quote, ChevronRight, User, History } from 'lucide-react';
+import { Trophy, Star, Calendar, Users, Plus, Trash2, Award, Quote, ChevronRight, User, UserCircle, History } from 'lucide-react';
 import { awardService } from '../../../services/awardService';
 import { authService } from '../../../services/authService';
 import { googleDriveService } from '../../../services/googleDriveService';
@@ -105,8 +105,8 @@ const EmployeeOfThePeriodMain: React.FC = () => {
                             referrerPolicy="no-referrer"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-amber-50 text-amber-200">
-                            <User size={80} strokeWidth={1} />
+                          <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+                            <UserCircle size={80} strokeWidth={1} />
                           </div>
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">

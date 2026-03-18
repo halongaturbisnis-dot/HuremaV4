@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { X, Edit2, Trash2, User, Phone, Mail, Calendar, MapPin, Briefcase, Shield, Heart, GraduationCap, Download, ExternalLink, Clock, Activity, Plus, Paperclip, FileBadge, Award, ShieldAlert, LogOut } from 'lucide-react';
+import { X, Edit2, Trash2, User, UserCircle, Phone, Mail, Calendar, MapPin, Briefcase, Shield, Heart, GraduationCap, Download, ExternalLink, Clock, Activity, Plus, Paperclip, FileBadge, Award, ShieldAlert, LogOut } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { Account, CareerLog, HealthLog, AccountContract, AccountCertification, WarningLog, TerminationLog, SalaryScheme } from '../../types';
 import { accountService } from '../../services/accountService';
@@ -322,7 +322,7 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
           {account.photo_google_id ? (
             <img src={googleDriveService.getFileUrl(account.photo_google_id)} className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-300"><User size={48} /></div>
+            <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400"><UserCircle size={48} /></div>
           )}
         </div>
         

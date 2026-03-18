@@ -22,7 +22,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children, activeTab, setAct
         
         <div className="flex items-center gap-3">
           <span className="text-xs font-semibold text-gray-700 truncate max-w-[120px]">{user.full_name}</span>
-          <div className="w-9 h-9 rounded-full bg-emerald-50 border border-emerald-100 overflow-hidden flex items-center justify-center text-[#006E62] font-bold shadow-sm">
+          <div className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center text-gray-400 font-bold shadow-sm">
             {user.photo_google_id ? (
               <img 
                 src={googleDriveService.getFileUrl(user.photo_google_id)} 

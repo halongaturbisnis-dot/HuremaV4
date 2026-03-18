@@ -21,7 +21,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onMenuClick, user }) => {
         <div className="flex flex-col items-end hidden sm:flex">
           <span className="text-sm font-semibold text-gray-700">{user.full_name}</span>
         </div>
-        <div className="w-10 h-10 rounded-full bg-emerald-50 border border-emerald-100 overflow-hidden flex items-center justify-center text-[#006E62] font-bold shadow-sm">
+        <div className="w-10 h-10 rounded-full bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center text-gray-400 font-bold shadow-sm">
           {user.photo_google_id ? (
             <img 
               src={googleDriveService.getFileUrl(user.photo_google_id)} 
