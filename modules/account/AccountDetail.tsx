@@ -17,6 +17,11 @@ import ContractFormModal from '../contract/ContractFormModal';
 import WarningForm from '../discipline/WarningForm';
 import TerminationForm from '../discipline/TerminationForm';
 import ContractDetailModal from '../contract/ContractDetailModal';
+import CareerDetailModal from './CareerDetailModal';
+import HealthDetailModal from './HealthDetailModal';
+import CertificationDetailModal from './CertificationDetailModal';
+import WarningDetailModal from './WarningDetailModal';
+import TerminationDetailModal from './TerminationDetailModal';
 
 interface AccountDetailProps {
   id: string;
@@ -43,6 +48,11 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
   const [showWarningForm, setShowWarningForm] = useState(false);
   const [showTerminationForm, setShowTerminationForm] = useState(false);
   const [selectedContractDetail, setSelectedContractDetail] = useState<AccountContract | null>(null);
+  const [selectedCareerDetail, setSelectedCareerDetail] = useState<CareerLog | null>(null);
+  const [selectedHealthDetail, setSelectedHealthDetail] = useState<HealthLog | null>(null);
+  const [selectedCertDetail, setSelectedCertDetail] = useState<AccountCertification | null>(null);
+  const [selectedWarningDetail, setSelectedWarningDetail] = useState<WarningLog | null>(null);
+  const [selectedTerminationDetail, setSelectedTerminationDetail] = useState<TerminationLog | null>(null);
   
   // Media Preview States
   const [previewMedia, setPreviewMedia] = useState<{ url: string, title: string, type: 'image' | 'qr' } | null>(null);
@@ -507,24 +517,44 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
               careerLogs.map((log) => {
                 if (!log) return null; // Safety guard
                 return (
-                  <div key={log.id} className="flex group justify-between items-start border-l-2 border-gray-100 pl-3 py-1 relative">
-                    <div className="absolute -left-[5px] top-2 w-2 h-2 rounded-full bg-[#006E62]"></div>
+                  <div 
+                    key={log.id} 
+                    className="flex group justify-between items-start border-l-2 border-emerald-100 pl-3 py-1 relative cursor-pointer hover:bg-gray-50/50 transition-colors"
+                    onClick={() => setSelectedCareerDetail(log)}
+                  >
                     <div className="flex-1 min-w-0 pr-4">
                       <p className="text-[10px] font-bold text-[#006E62] leading-tight">{log.position} • {log.grade}</p>
-                      <p className="text-[9px] text-gray-400 font-medium">{log.location_name}</p>
+                      <p className="text-[9px] text-gray-400 font-medium uppercase tracking-tighter">{log.location_name}</p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <p className="text-[8px] text-gray-300 font-bold uppercase">{formatDate(log.change_date)}</p>
+                        <p className="text-[8px] text-gray-400 font-bold uppercase">{formatDate(log.change_date)}</p>
                         {log.file_sk_id && (
-                          <button onClick={() => setPreviewMedia({ url: googleDriveService.getFileUrl(log.file_sk_id!).replace('=s1600', '=s0'), title: 'SK Kenaikan/Mutasi', type: 'image' })} className="text-[#006E62] hover:underline flex items-center gap-0.5 text-[8px] font-bold"><Paperclip size={8} /> SK</button>
+                          <button 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              window.open(googleDriveService.getViewerUrl(log.file_sk_id!), '_blank');
+                            }} 
+                            className="text-[#006E62] hover:text-[#005a50] flex items-center gap-0.5 text-[8px] font-bold"
+                          >
+                            <Paperclip size={10} /> SK
+                          </button>
                         )}
                       </div>
-                      {log.notes && <p className="text-[9px] text-gray-400 italic mt-1 line-clamp-1">"{log.notes}"</p>}
                     </div>
                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       {!isReadOnly && (
                         <>
-                          <button onClick={() => setShowLogForm({ type: 'career', data: log, isEdit: true })} className="text-gray-300 hover:text-[#006E62]"><Edit2 size={12} /></button>
-                          <button onClick={() => handleDeleteLog(log.id, 'career')} className="text-gray-300 hover:text-red-500"><Trash2 size={12} /></button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setShowLogForm({ type: 'career', data: log, isEdit: true }); }} 
+                            className="text-[#006E62] hover:opacity-80"
+                          >
+                            <Edit2 size={12} />
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleDeleteLog(log.id, 'career'); }} 
+                            className="text-red-500 hover:opacity-80"
+                          >
+                            <Trash2 size={12} />
+                          </button>
                         </>
                       )}
                     </div>
@@ -547,23 +577,44 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
               <p className="text-[10px] text-gray-400 italic">Belum ada data sertifikasi.</p>
             ) : (
               certs.map((cert) => (
-                <div key={cert.id} className="flex group justify-between items-start border-l-2 border-emerald-100 pl-3 py-1 relative">
-                  <div className="absolute -left-[5px] top-2 w-2 h-2 rounded-full bg-[#006E62]"></div>
+                <div 
+                  key={cert.id} 
+                  className="flex group justify-between items-start border-l-2 border-emerald-100 pl-3 py-1 relative cursor-pointer hover:bg-gray-50/50 transition-colors"
+                  onClick={() => setSelectedCertDetail(cert)}
+                >
                   <div className="flex-1 min-w-0 pr-4">
                     <p className="text-[10px] font-bold text-[#006E62] leading-tight">{cert.cert_name}</p>
                     <p className="text-[9px] text-gray-500 font-medium uppercase tracking-tighter">{cert.cert_type}</p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <p className="text-[8px] text-gray-400 font-bold uppercase">{formatDate(cert.cert_date)}</p>
                       {cert.file_id && (
-                        <button onClick={() => setPreviewMedia({ url: googleDriveService.getFileUrl(cert.file_id!).replace('=s1600', '=s0'), title: `Sertifikat ${cert.cert_name}`, type: 'image' })} className="text-[#006E62] hover:underline flex items-center gap-0.5 text-[8px] font-bold"><Paperclip size={8} /> FILE</button>
+                        <button 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            window.open(googleDriveService.getViewerUrl(cert.file_id!), '_blank');
+                          }} 
+                          className="text-[#006E62] hover:text-[#005a50] flex items-center gap-0.5 text-[8px] font-bold"
+                        >
+                          <Paperclip size={10} /> FILE
+                        </button>
                       )}
                     </div>
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     {!isReadOnly && (
                       <>
-                        <button onClick={() => setShowCertForm({ show: true, data: cert })} className="text-gray-300 hover:text-[#006E62]"><Edit2 size={12} /></button>
-                        <button onClick={() => handleDeleteCert(cert.id)} className="text-gray-300 hover:text-red-500"><Trash2 size={12} /></button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setShowCertForm({ show: true, data: cert }); }} 
+                          className="text-[#006E62] hover:opacity-80"
+                        >
+                          <Edit2 size={12} />
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleDeleteCert(cert.id); }} 
+                          className="text-red-500 hover:opacity-80"
+                        >
+                          <Trash2 size={12} />
+                        </button>
                       </>
                     )}
                   </div>
@@ -585,23 +636,44 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
               <p className="text-[10px] text-gray-400 italic">Belum ada riwayat kesehatan.</p>
             ) : (
               healthLogs.map((log) => (
-                <div key={log.id} className="flex group justify-between items-start border-l-2 border-red-100 pl-3 py-1 relative">
-                  <div className="absolute -left-[5px] top-2 w-2 h-2 rounded-full bg-red-500"></div>
+                <div 
+                  key={log.id} 
+                  className="flex group justify-between items-start border-l-2 border-emerald-100 pl-3 py-1 relative cursor-pointer hover:bg-gray-50/50 transition-colors"
+                  onClick={() => setSelectedHealthDetail(log)}
+                >
                   <div className="flex-1 min-w-0 pr-4">
-                    <p className="text-[10px] font-bold text-red-600 leading-tight">{log.mcu_status}</p>
+                    <p className="text-[10px] font-bold text-[#006E62] leading-tight">{log.mcu_status}</p>
                     <p className="text-[9px] text-gray-500 font-medium uppercase tracking-tighter">{log.health_risk}</p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <p className="text-[8px] text-gray-400 font-bold uppercase">{formatDate(log.change_date)}</p>
                       {log.file_mcu_id && (
-                        <button onClick={() => setPreviewMedia({ url: googleDriveService.getFileUrl(log.file_mcu_id!).replace('=s1600', '=s0'), title: `Hasil MCU ${log.mcu_status}`, type: 'image' })} className="text-red-600 hover:underline flex items-center gap-0.5 text-[8px] font-bold"><Paperclip size={8} /> MCU</button>
+                        <button 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            window.open(googleDriveService.getViewerUrl(log.file_mcu_id!), '_blank');
+                          }} 
+                          className="text-[#006E62] hover:text-[#005a50] flex items-center gap-0.5 text-[8px] font-bold"
+                        >
+                          <Paperclip size={10} /> MCU
+                        </button>
                       )}
                     </div>
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     {!isReadOnly && (
                       <>
-                        <button onClick={() => setShowLogForm({ type: 'health', data: log, isEdit: true })} className="text-gray-300 hover:text-red-600"><Edit2 size={12} /></button>
-                        <button onClick={() => handleDeleteLog(log.id, 'health')} className="text-gray-300 hover:text-red-500"><Trash2 size={12} /></button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setShowLogForm({ type: 'health', data: log, isEdit: true }); }} 
+                          className="text-[#006E62] hover:opacity-80"
+                        >
+                          <Edit2 size={12} />
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleDeleteLog(log.id, 'health'); }} 
+                          className="text-red-500 hover:opacity-80"
+                        >
+                          <Trash2 size={12} />
+                        </button>
                       </>
                     )}
                   </div>
@@ -612,20 +684,48 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
         </DetailSection>
 
         {/* j. Status Kedisiplinan */}
-        <DetailSection icon={ShieldAlert} title="Status Kedisiplinan" onAdd={() => setShowWarningForm(true)} isScrollable>
+        <DetailSection 
+          icon={ShieldAlert} 
+          title="Status Kedisiplinan" 
+          onAdd={() => setShowWarningForm(true)} 
+          isScrollable
+        >
           <div className="space-y-3">
-            {warnings.length === 0 ? <p className="text-[10px] text-gray-400 italic">Belum ada riwayat peringatan.</p> : (
+            {warnings.length === 0 ? (
+              <p className="text-[10px] text-gray-400 italic">Belum ada riwayat peringatan.</p>
+            ) : (
               warnings.map(w => (
-                <div key={w.id} className="flex group justify-between items-start border-l-2 border-orange-200 pl-3 py-1 relative">
+                <div 
+                  key={w.id} 
+                  className="flex group justify-between items-start border-l-2 border-emerald-100 pl-3 py-1 relative cursor-pointer hover:bg-gray-50/50 transition-colors"
+                  onClick={() => setSelectedWarningDetail(w)}
+                >
                   <div className="flex-1 min-w-0 pr-4">
-                    <p className="text-[10px] font-bold text-orange-600 leading-tight">{w.warning_type}</p>
+                    <p className="text-[10px] font-bold text-[#006E62] leading-tight">{w.warning_type}</p>
                     <p className="text-[8px] text-gray-400 uppercase font-bold">{formatDate(w.issue_date)}</p>
-                    <p className="text-[10px] text-gray-600 mt-1 line-clamp-1">{w.reason}</p>
-                    {w.file_id && <button onClick={() => setPreviewMedia({ url: googleDriveService.getFileUrl(w.file_id!).replace('=s1600', '=s0'), title: `Surat ${w.warning_type}`, type: 'image' })} className="text-[9px] font-bold text-[#006E62] mt-1 inline-block">LIHAT SURAT</button>}
+                    <p className="text-[10px] text-gray-600 mt-1 line-clamp-1 italic">"{w.reason}"</p>
+                    {w.file_id && (
+                      <button 
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          window.open(googleDriveService.getViewerUrl(w.file_id!), '_blank');
+                        }} 
+                        className="text-[#006E62] hover:text-[#005a50] flex items-center gap-0.5 text-[8px] font-bold mt-1"
+                      >
+                        <Paperclip size={10} /> LIHAT SURAT
+                      </button>
+                    )}
                   </div>
-                  {!isReadOnly && (
-                    <button onClick={() => handleDeleteWarning(w.id)} className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={12} /></button>
-                  )}
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {!isReadOnly && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleDeleteWarning(w.id); }} 
+                        className="text-red-500 hover:opacity-80"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))
             )}
@@ -633,9 +733,17 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
         </DetailSection>
 
         {/* k. Status Exit / Pemberhentian */}
-        <DetailSection icon={LogOut} title="Status Exit / Pemberhentian" onAdd={!termination && !isInactive ? () => setShowTerminationForm(true) : undefined}>
+        <DetailSection 
+          icon={LogOut} 
+          title="Status Exit / Pemberhentian" 
+          onAdd={!termination && !isInactive ? () => setShowTerminationForm(true) : undefined}
+          isScrollable
+        >
           {termination || isInactive ? (
-            <div className="space-y-3 p-3 bg-red-50/50 border border-red-100 rounded">
+            <div 
+              className="space-y-3 p-3 bg-red-50/50 border border-red-100 rounded cursor-pointer hover:bg-red-50 transition-colors"
+              onClick={() => termination && setSelectedTerminationDetail(termination)}
+            >
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest">{termination?.termination_type || 'KONTRAK BERAKHIR'}</span>
                 <span className="text-[10px] font-bold text-gray-500">{formatDate(termination?.termination_date || account.end_date || '')}</span>
@@ -647,10 +755,21 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
               {termination?.termination_type === 'Resign' && (
                 <DataRow label="Biaya Penalti" value={formatCurrency(termination.penalty_amount)} />
               )}
-              {termination?.file_id && <DataRow label="Surat Pemberhentian" value={termination.file_id} isFile />}
+              {termination?.file_id && (
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    window.open(googleDriveService.getViewerUrl(termination.file_id!), '_blank');
+                  }} 
+                  className="flex items-center gap-1.5 text-[11px] text-[#006E62] font-bold hover:underline"
+                >
+                  <Paperclip size={10} /> LIHAT SURAT PEMBERHENTIAN
+                </button>
+              )}
               {!isReadOnly && (
                 <button 
-                  onClick={async () => {
+                  onClick={async (e) => {
+                    e.stopPropagation();
                     const res = await Swal.fire({ title: 'Batalkan Pemberhentian?', text: 'Akun akan diaktifkan kembali.', icon: 'question', showCancelButton: true, confirmButtonColor: '#006E62' });
                     if (res.isConfirmed) {
                       setIsSaving(true);
@@ -728,6 +847,26 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
 
       {selectedContractDetail && (
         <ContractDetailModal contract={selectedContractDetail} onClose={() => setSelectedContractDetail(null)} />
+      )}
+
+      {selectedCareerDetail && (
+        <CareerDetailModal log={selectedCareerDetail} onClose={() => setSelectedCareerDetail(null)} />
+      )}
+
+      {selectedHealthDetail && (
+        <HealthDetailModal log={selectedHealthDetail} onClose={() => setSelectedHealthDetail(null)} />
+      )}
+
+      {selectedCertDetail && (
+        <CertificationDetailModal cert={selectedCertDetail} onClose={() => setSelectedCertDetail(null)} />
+      )}
+
+      {selectedWarningDetail && (
+        <WarningDetailModal log={selectedWarningDetail} onClose={() => setSelectedWarningDetail(null)} />
+      )}
+
+      {selectedTerminationDetail && (
+        <TerminationDetailModal log={selectedTerminationDetail} onClose={() => setSelectedTerminationDetail(null)} />
       )}
     </div>
   );
