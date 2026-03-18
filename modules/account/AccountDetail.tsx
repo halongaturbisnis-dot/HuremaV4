@@ -257,7 +257,7 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
   const currentLocation = latestCareer?.location_name || account.location?.name || '-';
 
   const DetailSection = ({ icon: Icon, title, onAdd, children, isScrollable = false }: { icon: any, title: string, onAdd?: () => void, children: React.ReactNode, isScrollable?: boolean }) => (
-    <div className="bg-white border border-gray-100 p-5 rounded-md shadow-sm flex flex-col">
+    <div className={`bg-white border border-gray-100 p-5 rounded-md shadow-sm flex flex-col ${isScrollable ? 'h-[320px]' : ''}`}>
       <div className="flex items-center justify-between border-b border-gray-50 pb-3 mb-4 shrink-0">
         <div className="flex items-center gap-2">
           <Icon size={16} className="text-[#006E62]" />
@@ -269,7 +269,7 @@ const AccountDetail: React.FC<AccountDetailProps> = ({ id, onClose, onEdit, onDe
           </button>
         )}
       </div>
-      <div className={`space-y-4 ${isScrollable ? 'max-h-[300px] overflow-y-auto pr-2 scrollbar-thin' : ''}`}>{children}</div>
+      <div className={`space-y-4 ${isScrollable ? 'flex-1 overflow-y-auto pr-2 scrollbar-thin' : ''}`}>{children}</div>
     </div>
   );
 
