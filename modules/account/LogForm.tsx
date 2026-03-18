@@ -24,7 +24,10 @@ const LogForm: React.FC<LogFormProps> = ({ type, accountId, initialData, isEdit 
     grade: initialData?.grade || '',
     location_id: initialData?.location_id || '',
     location_name: initialData?.location_name || (initialData?.location?.name || ''),
-    schedule_id: initialData?.schedule_id || '',
+    schedule_id: initialData?.schedule_id || (
+      initialData?.schedule_type === 'Fleksibel' ? 'FLEKSIBEL' : 
+      initialData?.schedule_type === 'Shift Dinamis' ? 'DINAMIS' : ''
+    ),
     file_sk_id: initialData?.file_sk_id || '',
     // Health Fields
     mcu_status: initialData?.mcu_status || '',

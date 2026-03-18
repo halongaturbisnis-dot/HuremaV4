@@ -190,6 +190,7 @@ export interface CareerLog {
   location_id?: string | null;
   location_name: string;
   schedule_id?: string | null;
+  schedule_type?: string | null;
   file_sk_id?: string | null;
   notes?: string | null;
   change_date: string;

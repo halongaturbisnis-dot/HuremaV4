@@ -142,7 +142,7 @@ const CareerLogMain: React.FC = () => {
       setIsLoading(true);
       if (editingLog) {
         await accountService.updateCareerLog(editingLog.id, data);
-        setLogs(prev => prev.map(l => l.id === editingLog.id ? { ...l, ...data } : l));
+        setLogs(prev => prev.map(l => l.id === editingLog.id ? { ...l, ...data, account: l.account } : l));
         setEditingLog(null);
         Swal.fire({ title: 'Berhasil!', text: 'Log karir telah diperbarui.', icon: 'success', timer: 1500, showConfirmButton: false });
       }

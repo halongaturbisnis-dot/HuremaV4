@@ -435,8 +435,8 @@ export const accountService = {
   // Manual Log Management
   async createCareerLog(logInput: CareerLogInput) {
     // Filtrasi: Pastikan hanya kolom yang ada di tabel account_career_logs yang dikirim
-    const { account_id, position, grade, location_name, file_sk_id, notes, location_id, schedule_id, change_date } = logInput;
-    const payload = sanitizePayload({ account_id, position, grade, location_name, file_sk_id, notes, change_date, location_id, schedule_id });
+    const { account_id, position, grade, location_name, file_sk_id, notes, location_id, schedule_id, schedule_type, change_date } = logInput;
+    const payload = sanitizePayload({ account_id, position, grade, location_name, file_sk_id, notes, change_date, location_id, schedule_id, schedule_type });
     
     const { data, error } = await supabase
       .from('account_career_logs')
@@ -453,15 +453,16 @@ export const accountService = {
       position,
       grade,
       location_id: location_id || null,
-      schedule_id: schedule_id || null
+      schedule_id: schedule_id || null,
+      schedule_type: schedule_type || null
     });
 
     return data[0] as CareerLog;
   },
 
   async updateCareerLog(id: string, logInput: Partial<CareerLogInput>) {
-    const { account_id, position, grade, location_name, file_sk_id, notes, location_id, schedule_id, change_date } = logInput;
-    const payload = sanitizePayload({ account_id, position, grade, location_name, file_sk_id, notes, change_date, location_id, schedule_id });
+    const { account_id, position, grade, location_name, file_sk_id, notes, location_id, schedule_id, schedule_type, change_date } = logInput;
+    const payload = sanitizePayload({ account_id, position, grade, location_name, file_sk_id, notes, change_date, location_id, schedule_id, schedule_type });
 
     const { data, error } = await supabase
       .from('account_career_logs')
@@ -479,7 +480,8 @@ export const accountService = {
         position,
         grade,
         location_id: location_id || null,
-        schedule_id: schedule_id || null
+        schedule_id: schedule_id || null,
+        schedule_type: schedule_type || null
       });
     }
 
